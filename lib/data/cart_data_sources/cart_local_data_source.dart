@@ -18,6 +18,7 @@ abstract class CartLocalDataSource {
   Future<int> getCartItemCount();
 
   Future<int> getCartTotal();
+  Future<int> getDiscountCartTotal();
   Future<List<CartItem>> getUnsyncedCartItems();
   Future<void> markAllCartItemsSynced();
 }
@@ -66,6 +67,11 @@ class CartLocalDataSourceImpl implements CartLocalDataSource {
   @override
   Future<int> getCartTotal() async {
     return await _database.getCartTotal();
+  }
+
+  @override
+  Future<int> getDiscountCartTotal() async {
+    return await _database.getDiscountCartTotal();
   }
 
   @override

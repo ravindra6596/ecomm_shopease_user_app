@@ -61,6 +61,8 @@ class OrderItems {
 
 
   int? total_amount;
+  int? total_discount_price;
+  int? shipping;
 
   String? status;
 
@@ -81,6 +83,8 @@ class OrderItems {
     this.user_id,
     this.address_id,
     this.total_amount,
+    this.total_discount_price,
+    this.shipping,
     this.status,
     this.payment_status,
     this.payment_method,
@@ -106,7 +110,8 @@ class ProductItems {
 
   int? quantity;
   int? price;
-
+  int? discount;
+  int? discount_price;
 
   int? total_price;
 
@@ -117,6 +122,8 @@ class ProductItems {
     this.quantity,
     this.price,
     this.total_price,
+    this.discount,
+    this.discount_price,
   });
 
   factory ProductItems.fromJson(Map<String, dynamic> json) =>

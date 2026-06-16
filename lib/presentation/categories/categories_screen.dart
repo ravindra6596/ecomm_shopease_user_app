@@ -549,7 +549,17 @@ class _CategoriesScreenState extends State<CategoriesScreen>  with SingleTickerP
                   ),
                   const SizedBox(height: 4),
                   CustomText(
-                    text: '₹${Functions.formatPrice(product.price ?? 0)}',
+                    text:'₹${Functions.formatPrice(product?.price)}',
+                    style: CustomTextStyle.bold,
+                    fontSize: 16,
+                    color: blackColor.withValues(alpha: .2),
+                    decoration: TextDecoration.lineThrough,
+                    decorationColor: blackColor.withValues(alpha: .2),
+                  ),
+
+                  const SizedBox(height: 4),
+                  CustomText(
+                    text: '₹${Functions.formatPrice(product.discount_price ?? 0)}',
                     fontSize: 14,
                     color: primaryColor,
                     style: CustomTextStyle.bold,

@@ -16,7 +16,10 @@ abstract class CartRepository {
   Future<Result<void, Exception>> addToCart(
     int productId,
     String productName,
-    int productPrice, {
+    int productPrice,
+    int discount,
+    int discountPrice,
+      {
     String? productImageUrl,
   });
   Future<Result<CartData, Exception>> getCartItems();
@@ -56,16 +59,22 @@ class CartRepositoryImpl implements CartRepository {
   Future<Result<void, Exception>> _addToLocalCart(
     int productId,
     String productName,
-    int productPrice, {
+    int productPrice,
+    int discount,
+    int discountPrice,
+      {
     String? productImageUrl,
   }) async {
     final cartItem = CartItem(
       product_id: productId,
       product_name: productName,
       product_price: productPrice,
+      discount: discount,
+      discount_price: discountPrice,
       product_image_url: productImageUrl,
       quantity: 1,
       total_price: productPrice,
+      total_discount_price: discountPrice
     );
     await _localDataSource.addToCart(cartItem);
     return Success(null);
@@ -113,6 +122,7 @@ class CartRepositoryImpl implements CartRepository {
     final items = await _enrichItemsWithImages(normalized.items ?? []);
     return CartData(
       grand_total: normalized.grand_total,
+      grand_discount_total: normalized.grand_discount_total,
       total_items: normalized.total_items,
       items: items,
     );
@@ -122,9 +132,11 @@ class CartRepositoryImpl implements CartRepository {
     final items = await _localDataSource.getCartItems();
     final totalItems = await _localDataSource.getCartItemCount();
     final grandTotal = await _localDataSource.getCartTotal();
+    final grandDiscountTotal = await _localDataSource.getDiscountCartTotal();
     final data = await _finalizeCartData(
       CartData(
         grand_total: grandTotal,
+        grand_discount_total: grandDiscountTotal,
         total_items: totalItems,
         items: items,
       ),
@@ -142,6 +154,7 @@ class CartRepositoryImpl implements CartRepository {
           data.data ??
               CartData(
                 grand_total: 0,
+                grand_discount_total: 0,
                 total_items: 0,
                 items: const [],
               ),
@@ -171,6 +184,7 @@ class CartRepositoryImpl implements CartRepository {
     });
     return CartData(
       grand_total: data.grand_total,
+      grand_discount_total: data.grand_discount_total,
       total_items: data.total_items,
       items: items,
     );
@@ -191,7 +205,10 @@ class CartRepositoryImpl implements CartRepository {
   Future<Result<void, Exception>> addToCart(
     int productId,
     String productName,
-    int productPrice, {
+    int productPrice,
+    int discount,
+    int discountPrice,
+      {
     String? productImageUrl,
   }) async {
     try {
@@ -207,6 +224,8 @@ class CartRepositoryImpl implements CartRepository {
           productId,
           productName,
           productPrice,
+          discount,
+          discountPrice,
           productImageUrl: productImageUrl,
         );
         return Success(null);
@@ -215,6 +234,8 @@ class CartRepositoryImpl implements CartRepository {
         productId,
         productName,
         productPrice,
+        discount,
+        discountPrice,
         productImageUrl: productImageUrl,
       );
     } on Exception catch (e) {
@@ -233,6 +254,7 @@ class CartRepositoryImpl implements CartRepository {
               data.data ??
                   CartData(
                     grand_total: 0,
+                    grand_discount_total: 0,
                     total_items: 0,
                     items: const [],
                   ),
@@ -459,6 +481,11 @@ class CartRepositoryImpl implements CartRepository {
         total_price: remote.total_price ??
             ((remote.product_price ?? 0) *
                 (remote.quantity ?? 1)),
+        total_discount_price: remote.total_discount_price ??
+            ((remote.discount_price ?? 0) *
+                (remote.quantity ?? 1)),
+        discount: remote.discount ?? 0,
+        discount_price: remote.discount_price ?? 0,
 
         // IMPORTANT
         is_synced: 1,

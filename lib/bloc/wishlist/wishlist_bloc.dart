@@ -57,6 +57,8 @@ class WishlistBloc
         event.productId,
         event.productName,
         event.productPrice,
+        event.discount,
+        event.discountPrice,
         productImageUrl:
         event.productImageUrl,
       );

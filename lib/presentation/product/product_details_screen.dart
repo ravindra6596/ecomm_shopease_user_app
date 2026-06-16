@@ -136,6 +136,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>   with Sing
                             widget.productId,
                             product.name ?? '',
                             product.price ?? 0,
+                            product.discount ?? 0,
+                            product.discount_price ?? 0,
                             productImageUrl: product.images  ?.isNotEmpty ==  true
                                 ? product.images!.first.image_url: null,
                           ),
@@ -264,6 +266,37 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>   with Sing
                         color: greyColor,
                       ),
                       SizedBox(height: 16.sp),
+                      Row(
+                        children: [
+                          Icon(Icons.arrow_downward, size: 16,color: successColor),
+                          CustomText(
+                            text:'${product.discount}% ',
+                            style: CustomTextStyle.bold,
+                            fontSize: 20.px,
+                            color: successColor,
+                          ),
+                          SizedBox(width: 4),
+                          Expanded(
+                            child: CustomText(
+                              text:'₹${Functions.formatPrice(product.price)}',
+                              style: CustomTextStyle.bold,
+                              fontSize: 16,
+                              color: blackColor.withValues(alpha: .2),
+                              decoration: TextDecoration.lineThrough,
+                              decorationColor: blackColor.withValues(alpha: .2),
+                            ),
+                          ),
+                          Spacer(),
+                          Expanded(
+                            child: CustomText(
+                              text:'₹${Functions.formatPrice(product.discount_price)}',
+                              style: CustomTextStyle.bold,
+                              fontSize: 20.px,
+                              color: blackColor,
+                            ),
+                          ),
+                        ],
+                      ),
                       if (product.description != null &&
                           product.description!.isNotEmpty)
                         Column(
@@ -443,14 +476,14 @@ class _ProductCartBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CustomText(
-                  text: price,
+                  text: buyNowAt,
                   style: CustomTextStyle.regular,
                   fontSize: 12.px,
                   color: blackColor,
                 ),
                 SizedBox(height: 4.sp),
                 CustomText(
-                  text: '₹${Functions.formatPrice(product.price ?? 0)}',
+                  text: '₹${Functions.formatPrice(product.discount_price ?? 0)}',
                   style: CustomTextStyle.bold,
                   fontSize: 24.px,
                   color: primaryColor,
@@ -487,6 +520,8 @@ class _ProductCartBar extends StatelessWidget {
                         productId,
                         product.name ?? '',
                         product.price ?? 0,
+                        product.discount ?? 0,
+                        product.discount_price ?? 0,
                         productImageUrl: product.images?.isNotEmpty == true
                             ? product.images!.first.image_url
                             : null,

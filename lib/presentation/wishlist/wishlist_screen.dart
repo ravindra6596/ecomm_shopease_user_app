@@ -13,6 +13,7 @@ import 'package:e_comm_user/utils/functions.dart';
 import 'package:e_comm_user/utils/strings.dart';
 import 'package:e_comm_user/widgets/cart/empty_cart_widget.dart';
 import 'package:e_comm_user/widgets/custom_appbar.dart';
+import 'package:e_comm_user/widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -63,11 +64,8 @@ class _WishlistScreenState
             WishlistState>(
           listenWhen: (previous, current) =>
           current
-          is WishlistErrorState ||
-              current
-              is SyncWishlistSuccessState ||
-              current
-              is SyncWishlistFailureState,
+          is WishlistErrorState || current is SyncWishlistSuccessState ||
+              current is SyncWishlistFailureState,
 
           listener: (context, state) {
             if (state
@@ -279,7 +277,7 @@ class WishlistItemWidget extends StatelessWidget {
                     Container(
                       width: 24.w,
                       height: 24.w,
-                      color: greyColor.withOpacity(0.1),
+                      color: greyColor.withValues(alpha: 0.1),
                       child: const Center(
                         child:
                         CircularProgressIndicator(),
@@ -291,7 +289,7 @@ class WishlistItemWidget extends StatelessWidget {
                       width: 24.w,
                       height: 24.w,
                       color:
-                      greyColor.withOpacity(0.1),
+                      greyColor.withValues(alpha: 0.1),
                       child: Icon(
                         Icons.image_not_supported,
                         color: greyColor,
@@ -329,13 +327,33 @@ class WishlistItemWidget extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child:Text(
-                          '₹${item.product_price ?? 0}',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                          ),
+                        child: Row(
+                          children: [
+                            Visibility(
+                              visible: item.product_price !=null,
+                              child: Expanded(
+                                child: CustomText(
+                                  text:'₹${Functions.formatPrice(item.product_price)}',
+                                  style: CustomTextStyle.bold,
+                                  fontSize: 16,
+                                  color: blackColor.withValues(alpha: .2),
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: blackColor.withValues(alpha: .2),
+                                ),
+                              ),
+                            ),
+                            Visibility(
+                              visible: item.discount_price !=null,
+                              child: Expanded(
+                                child: CustomText(
+                                  text:'₹${Functions.formatPrice(item.discount_price)}',
+                                  style: CustomTextStyle.bold,
+                                  fontSize: 16,
+                                  color: blackColor,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -348,7 +366,7 @@ class WishlistItemWidget extends StatelessWidget {
                           EdgeInsets.all(2.5.w),
                           decoration: BoxDecoration(
                             color: errorColor
-                                .withOpacity(0.1),
+                                .withValues(alpha: 0.1),
                             borderRadius:
                             BorderRadius.circular(
                               10,

@@ -24,6 +24,8 @@ class CartItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final productName = item.product_name ?? 'Unknown Product';
     final productPrice = item.product_price ?? 0;
+    final discount = item.discount ?? 0;
+    final discountPrice = item.discount_price ?? 0;
     final quantity = item.quantity ?? 1;
     final imageUrl = item.product_image_url ?? '';
 
@@ -74,11 +76,35 @@ class CartItemWidget extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 0.8.h),
-                  CustomText(
-                    text: Functions.formatInr(productPrice),
-                    style: CustomTextStyle.bold,
-                    fontSize: 15.sp,
-                    color: blackColor,
+                  Row(
+                    children: [
+                      Icon(Icons.arrow_downward, size: 16,color: successColor),
+                      CustomText(
+                        text:'$discount% ',
+                        style: CustomTextStyle.bold,
+                        fontSize: 20.px,
+                        color: successColor,
+                      ),
+                      SizedBox(width: 4),
+                      Expanded(
+                        child: CustomText(
+                          text:'₹${Functions.formatPrice(productPrice)}',
+                          style: CustomTextStyle.bold,
+                          fontSize: 16,
+                          color: blackColor.withValues(alpha: .2),
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: blackColor.withValues(alpha: .2),
+                        ),
+                      ),
+                      Expanded(
+                        child: CustomText(
+                          text:'₹${Functions.formatPrice(discountPrice)}',
+                          style: CustomTextStyle.bold,
+                          fontSize: 16,
+                          color: blackColor,
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 1.2.h),
                   Align(

@@ -31,6 +31,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         event.productId,
         event.productName,
         event.productPrice,
+        event.discount,
+        event.discountPrice,
         productImageUrl: event.productImageUrl,
       );
 
@@ -88,6 +90,7 @@ class CartBloc extends Bloc<CartEvent, CartState> {
       currentCartItems,
       data.total_items ?? 0,
       data.grand_total ?? 0,
+      data.grand_discount_total ?? 0,
       snackbarMessage: snackbarMessage,
     ));
   }

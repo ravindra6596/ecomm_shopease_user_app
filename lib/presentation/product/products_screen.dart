@@ -81,19 +81,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       productBloc.add(ProductListEvent(pageNo, limit, searchController.text, selectedCategoryId));
     }
   }
-  int getEstimatedDeliveryDays(String? input) {
-    final base = DateTime.now().millisecondsSinceEpoch;
 
-    final hash = (input ?? '').hashCode;
-
-    // creates stable variation per product
-    final value = (base + hash) % 5; // 0–4
-
-    return 2 + value; // final range: 2 to 6 days
-  }
-  double getRating(int id) {
-    return 3 + (id % 3) * 0.5; // 3.0, 3.5, 4.0, 4.5
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -218,7 +206,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                               : const SizedBox();
                         }
                         final product = productResponseModel?.data?.items?[index];
-                        final days = getEstimatedDeliveryDays(product?.id.toString());
+                        final days = Functions.getEstimatedDeliveryDays(product?.id.toString());
 
                         final deliveryDate = DateTime.now().add(Duration(days: days));
 
@@ -289,6 +277,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                                         product?.id ?? 0,
                                                         product?.name ?? '',
                                                         product?.price ?? 0,
+                                                        product?.discount ?? 0,
+                                                        product?.discount_price ?? 0,
                                                         productImageUrl: product?.images  ?.isNotEmpty ==  true
                                                             ? product?.images!.first.image_url: null,
                                                       ),
@@ -327,7 +317,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                         SizedBox(height: 4),
                                         Row(
                                           children: List.generate(5, (index) {
-                                            double rating = getRating(product?.id ?? 0);
+                                            double rating = Functions.getRating(product?.id ?? 0);
 
                                             return Icon(
                                               index < rating ? Icons.star : Icons.star_border,

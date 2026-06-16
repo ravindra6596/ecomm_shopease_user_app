@@ -70,6 +70,8 @@ class WishlistItem {
   final int? product_id;
   final String? product_name;
   final int? product_price;
+  final int? discount;
+  final int? discount_price;
   final int is_synced;
   final String? product_image_url;
   final String? created_at;
@@ -77,6 +79,8 @@ class WishlistItem {
   WishlistItem({
     this.id,
     this.product_id,
+    this.discount,
+    this.discount_price,
     this.product_name,
     this.product_price,
     this.is_synced = 0,
@@ -94,6 +98,8 @@ class WishlistItem {
       product_id: item.product_id,
       product_name: item.product_name,
       product_price: item.product_price,
+      discount: item.discount,
+      discount_price: item.discount_price,
       product_image_url:
       json['product_image_url'] ??
           json['image_url'],
@@ -113,6 +119,8 @@ class WishlistItem {
         product_id: row['product_id'],
         product_name: row['product_name'],
         product_price: row['product_price'],
+        discount: row['discount'],
+        discount_price: row['discount_price'],
         product_image_url:
         row['product_image_url'],
         is_synced: row['is_synced'] ?? 0,
@@ -123,6 +131,8 @@ class WishlistItem {
     'product_id': product_id,
     'product_name': product_name,
     'product_price': product_price,
+    'discount': discount,
+    'discount_price': discount_price,
     'product_image_url': product_image_url,
     'is_synced': is_synced,
     'created_at':
@@ -140,6 +150,8 @@ class WishlistItem {
         product_id: product_id,
         product_name: product_name,
         product_price: product_price,
+        discount: discount,
+        discount_price: discount_price,
         product_image_url:
         product_image_url ?? this.product_image_url,
         is_synced: is_synced ?? this.is_synced,

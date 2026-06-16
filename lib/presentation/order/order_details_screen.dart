@@ -14,6 +14,7 @@ import 'package:e_comm_user/utils/constants.dart';
 import 'package:e_comm_user/utils/functions.dart';
 import 'package:e_comm_user/utils/strings.dart';
 import 'package:e_comm_user/widgets/cart/cart_item_widget.dart';
+import 'package:e_comm_user/widgets/cart/cart_summary_widget.dart';
 import 'package:e_comm_user/widgets/custom_appbar.dart';
 import 'package:e_comm_user/widgets/custom_button.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
@@ -109,6 +110,16 @@ class OrderDetailsScreen extends StatelessWidget {
                   final currentStep = statusSteps.indexOf(
                     orderData?.status?.toLowerCase() ?? '',
                   );
+                  final discountAmount = orderData?.total_discount_price ?? 0;
+                  final shipping = orderData?.shipping ?? 0;
+                  final totalAmount = orderData?.total_amount ?? 0;
+                  final totalDiscount = totalAmount - discountAmount;
+                  final savings = totalDiscount - shipping;
+
+                  final displayAmount =
+                  (discountAmount == 0 && shipping == 0)
+                      ? totalAmount
+                      : discountAmount + shipping;
                   return  SingleChildScrollView(
                       padding: EdgeInsets.symmetric(horizontal: 5.w),
                       child: Column(
@@ -167,8 +178,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                   Expanded(
                                     child: infoTile(
                                       title: total,
-                                      value: "₹${Functions.formatPrice(orderData?.total_amount ?? 0)}",
-                                    ),
+                                      value: "₹${Functions.formatPrice(displayAmount)}",                                    ),
                                   ),
                                 ],
                               ),
@@ -295,15 +305,8 @@ class OrderDetailsScreen extends StatelessWidget {
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             SizedBox(height: 1.h),
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                infoTile(title: qty, value: item?.quantity?.toString() ?? '',isHorizontal: true),
-                                                infoTile(title: price, value: Functions.formatInr(item?.price ?? 0),isHorizontal: true),
-                                              ],
-                                            ),
+                                            infoTile(title: qty, value: item?.quantity?.toString() ?? '',isHorizontal: true),
                                             SizedBox(height: 1.h),
-                                            infoTile(title: total, value: Functions.formatInr(item?.total_price ?? 0),isHorizontal: true),
                                           ],
                                         ),
                                       ),
@@ -312,6 +315,60 @@ class OrderDetailsScreen extends StatelessWidget {
                                 ),
                               );
                             },
+                          ),
+                          CustomText(text: orderSummary),
+                          SummaryRow(label: subTotal,value: totalAmount),
+                          SizedBox(height: 0.8.h),
+                          SummaryRow(label: discount, value: totalDiscount, isDiscount: true),
+                          SizedBox(height: 0.8.h),
+                          SummaryRow(label: protectPromiseFee, value: shipping ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 1.2.h),
+                            child: Divider(color: dividerColor,height: 1),
+                          ),
+                          SummaryRow(label: total,value: displayAmount,isTotal: true),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: successColor.withValues(alpha: .2),
+                              borderRadius: BorderRadius.circular(1.h),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  color: successColor,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: RichText(
+                                    text: TextSpan(
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        color: blackColor.withValues(alpha: .7),
+                                      ),
+                                      children: [
+                                        const TextSpan(text: 'You saved '),
+                                        TextSpan(
+                                          text: Functions.formatInr(savings),
+                                          style: TextStyle(
+                                            color: successColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14.sp,
+                                          ),
+                                        ),
+                                        const TextSpan(text: ' on this order'),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,

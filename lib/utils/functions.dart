@@ -73,4 +73,17 @@ class Functions {
       return dateStr;
     }
   }
+  static int getEstimatedDeliveryDays(String? input) {
+    final base = DateTime.now().millisecondsSinceEpoch;
+
+    final hash = (input ?? '').hashCode;
+
+    // creates stable variation per product
+    final value = (base + hash) % 5; // 0–4
+
+    return 2 + value; // final range: 2 to 6 days
+  }
+  static double getRating(int id) {
+    return 3 + (id % 3) * 0.5; // 3.0, 3.5, 4.0, 4.5
+  }
 }

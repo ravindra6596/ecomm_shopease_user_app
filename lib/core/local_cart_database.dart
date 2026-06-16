@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:e_comm_user/models/wishlist_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -37,10 +39,13 @@ class LocalCartDatabase {
         product_id INTEGER NOT NULL UNIQUE,
         product_name TEXT NOT NULL,
         product_price INTEGER NOT NULL,
+        discount INTEGER,
+        discount_price INTEGER,
         product_image_url TEXT,
         quantity INTEGER NOT NULL DEFAULT 1,
         is_synced INTEGER NOT NULL DEFAULT 0,
         total_price INTEGER NOT NULL,
+        total_discount_price INTEGER NOT NULL,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
@@ -51,6 +56,8 @@ class LocalCartDatabase {
     product_id INTEGER NOT NULL UNIQUE,
     product_name TEXT NOT NULL,
     product_price INTEGER NOT NULL,
+    discount INTEGER,
+    discount_price INTEGER,
     product_image_url TEXT,
     is_synced INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
@@ -85,17 +92,15 @@ class LocalCartDatabase {
     );
 
     if (existingItem.isNotEmpty) {
-      final currentQuantity =
-      existingItem.first['quantity'] as int;
+      final currentQuantity = existingItem.first['quantity'] as int;
 
-      final productPrice =
-      existingItem.first['product_price'] as int;
+      final productPrice = existingItem.first['product_price'] as int;
+      final discountPrice = existingItem.first['discount_price'] as int;
 
-      final newQuantity =
-          currentQuantity + (item.quantity ?? 1);
+      final newQuantity = currentQuantity + (item.quantity ?? 1);
 
-      final newTotalPrice =
-          newQuantity * productPrice;
+      final newTotalPrice = newQuantity * productPrice;
+      final newDiscountPrice = newQuantity * discountPrice;
 
       /// IMPORTANT
       /// mark as unsynced because user modified it
@@ -104,6 +109,7 @@ class LocalCartDatabase {
         {
           'quantity': newQuantity,
           'total_price': newTotalPrice,
+          'total_discount_price': newDiscountPrice,
 
           // CRITICAL FIX
           'is_synced': 0,
@@ -146,13 +152,16 @@ class LocalCartDatabase {
     if (item.isEmpty) return 0;
 
     final productPrice = item.first['product_price'] as int;
+    final discountPrice = item.first['discount_price'] as int;
     final newTotalPrice = quantity * productPrice;
+    final newDiscountPrice = quantity * discountPrice;
 
     return await db.update(
       'cart_items',
       {
         'quantity': quantity,
         'total_price': newTotalPrice,
+        'total_discount_price': newDiscountPrice,
         'updated_at': DateTime.now().toIso8601String(),
       },
       where: 'product_id = ?',
@@ -197,6 +206,12 @@ class LocalCartDatabase {
     final result =
         await db.rawQuery('SELECT SUM(total_price) as total FROM cart_items');
     return result.first['total'] as int? ?? 0;
+  }
+  Future<int> getDiscountCartTotal() async {
+    final db = await database;
+    final result =
+        await db.rawQuery('SELECT SUM(total_discount_price) as total_discount FROM cart_items');
+    return result.first['total_discount'] as int? ?? 0;
   }
   // Get only unsynced items
   Future<List<CartItem>> getUnsyncedCartItems() async {

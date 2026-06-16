@@ -11,7 +11,10 @@ abstract class WishlistRepository {
   Future<Result<void, Exception>> addToWishlist(
       int productId,
       String productName,
-      int productPrice, {
+      int productPrice,
+      int discount,
+      int discountPrice,
+      {
         String? productImageUrl,
       });
 
@@ -59,13 +62,18 @@ class WishlistRepositoryImpl
   Future<Result<void, Exception>> _addToLocalWishlist(
       int productId,
       String productName,
-      int productPrice, {
+      int productPrice,
+      int discount,
+      int discountPrice,
+      {
         String? productImageUrl,
       }) async {
     final item = WishlistItem(
       product_id: productId,
       product_name: productName,
       product_price: productPrice,
+      discount: discount,
+      discount_price: discountPrice,
       product_image_url: productImageUrl,
     );
 
@@ -206,7 +214,10 @@ class WishlistRepositoryImpl
   Future<Result<void, Exception>> addToWishlist(
       int productId,
       String productName,
-      int productPrice, {
+      int productPrice,
+      int discount,
+      int discountPrice,
+      {
         String? productImageUrl,
       }) async {
     try {
@@ -233,6 +244,8 @@ class WishlistRepositoryImpl
           productId,
           productName,
           productPrice,
+          discount,
+          discountPrice,
           productImageUrl: productImageUrl,
         );
 
@@ -243,6 +256,8 @@ class WishlistRepositoryImpl
         productId,
         productName,
         productPrice,
+        discount,
+        discountPrice,
         productImageUrl: productImageUrl,
       );
     } on Exception catch (e) {
@@ -452,6 +467,8 @@ class WishlistRepositoryImpl
         remote.product_name ?? '',
         product_price:
         remote.product_price ?? 0,
+        discount: remote.discount ?? 0,
+        discount_price: remote.discount_price ?? 0,
         product_image_url:
         remote.product_image_url,
         is_synced: 1,

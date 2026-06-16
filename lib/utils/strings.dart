@@ -208,6 +208,10 @@ String noAddress = 'No Address';
 String addAddress = 'Add Address';
 String rememberMeText = 'Remember Me';
 String offersText = 'Offers';
+String buyNowAt = 'Buy now at';
+String discount = 'Discount';
+String protectPromiseFee = 'Protect Promise Fee';
+
 
 
 

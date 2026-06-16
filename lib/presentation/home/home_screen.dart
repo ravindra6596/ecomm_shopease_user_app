@@ -384,15 +384,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: BlocBuilder<HomeBloc, HomeState>(
                   builder: (context, state) {
                     if (state is HomeLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height/1.5,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
                       );
                     }
 
                     if (state is HomeError) {
-                      return Center(
-                        child: CustomText(
-                          text: state.message,
+                      return SizedBox(
+                        height: MediaQuery.of(context).size.height/1.5,
+                        child: Center(
+                          child: CustomText(
+                            text: state.message,
+                          ),
                         ),
                       );
                     }
@@ -725,10 +731,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: CustomTextStyle.bold,
                 ),
                 SizedBox(height: 6.px),
-                CustomText(
-                  text: "₹${Functions.formatPrice(product.price ?? 0)}",
-                  color: primaryColor,
-                  style: CustomTextStyle.bold,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: CustomText(
+                        text:'₹${Functions.formatPrice(product.price)}',
+                        style: CustomTextStyle.bold,
+                        fontSize: 16,
+                        color: blackColor.withValues(alpha: .2),
+                        decoration: TextDecoration.lineThrough,
+                        decorationColor: blackColor.withValues(alpha: .2),
+                      ),
+                    ),
+                    Expanded(
+                      child: CustomText(
+                        text:'₹${Functions.formatPrice(product.discount_price)}',
+                        style: CustomTextStyle.bold,
+                        fontSize: 16,
+                        color: blackColor,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4),
+                Row(
+                  children: List.generate(5, (index) {
+                    double rating = Functions.getRating(product.id ?? 0);
+
+                    return Icon(
+                      index < rating ? Icons.star : Icons.star_border,
+                      color: successColor,
+                      size: 18,
+                    );
+                  }),
                 ),
               ],
             ),

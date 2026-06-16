@@ -93,6 +93,7 @@ class _CartScreenState extends State<CartScreen> {
                   cartBloc,
                   cartBloc.currentCartItems,
                   0,
+                  0,
                 ),
                 const SyncCartLoadingWidget(),
               ],
@@ -105,6 +106,7 @@ class _CartScreenState extends State<CartScreen> {
               cartBloc,
               state.items,
               state.grandTotal,
+              state.discountTotal,
             );
           }
 
@@ -121,6 +123,7 @@ class _CartScreenState extends State<CartScreen> {
               cartBloc,
               cartBloc.currentCartItems,
               0,
+              0,
             );
           }
           return const CartLoadingWidget();
@@ -134,6 +137,7 @@ class _CartScreenState extends State<CartScreen> {
     CartBloc cartBloc,
     List<CartItem> items,
     int grandTotal,
+    int discountTotal,
   ) {
     if (items.isEmpty) {
       return EmptyCartWidget(
@@ -153,6 +157,9 @@ class _CartScreenState extends State<CartScreen> {
     final subtotal = grandTotal > 0
         ? grandTotal
         : items.fold<int>(0, (sum, item) => sum + (item.total_price ?? 0));
+    final discountAmount = discountTotal > 0
+        ? discountTotal
+        : items.fold<int>(0, (sum, item) => sum + (item.discount_price ?? 0));
     const shipping = _defaultShippingFee;
     const vat = 0;
     final total = subtotal + shipping + vat;
@@ -212,6 +219,7 @@ class _CartScreenState extends State<CartScreen> {
           shipping: shipping,
           vat: vat,
           totalAmount: total,
+          discountAmount: discountAmount,
           onCheckout: () {
             getIt<AppRoutes>().push(CheckoutRoute());
           },

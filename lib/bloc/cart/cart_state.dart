@@ -10,13 +10,16 @@ class CartLoadedState extends CartState {
   final List<CartItem> items;
   final int totalItems;
   final int grandTotal;
+  final int discountTotal;
   /// One-shot message for snackbar (e.g. after add to cart). Cart tab ignores this.
   final String? snackbarMessage;
 
   CartLoadedState(
     this.items,
     this.totalItems,
-    this.grandTotal, {
+    this.grandTotal,
+    this.discountTotal,
+      {
     this.snackbarMessage,
   });
 }

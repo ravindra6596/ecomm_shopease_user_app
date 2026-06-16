@@ -19,6 +19,7 @@ import 'package:e_comm_user/utils/functions.dart';
 import 'package:e_comm_user/utils/strings.dart';
 import 'package:e_comm_user/widgets/cart/cart_item_widget.dart';
 import 'package:e_comm_user/widgets/cart/cart_summary_widget.dart';
+import 'package:e_comm_user/widgets/custom_appbar.dart';
 import 'package:e_comm_user/widgets/custom_button.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
 import 'package:flutter/material.dart';
@@ -78,13 +79,7 @@ class _CheckoutScreenState extends State<CheckoutScreen>
     navContext = context;
     return Scaffold(
       backgroundColor:whiteColor,
-      appBar: AppBar(
-        title: const Text("Checkout"),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-      ),
+      appBar: CustomAppBar(title: checkout),
 
       // bottomNavigationBar: _buildPlaceOrderButton(),
       bottomNavigationBar: BlocBuilder<OrderBloc, OrderState>(
@@ -160,9 +155,16 @@ class _CheckoutScreenState extends State<CheckoutScreen>
 
                         final subtotal = items.fold<int>(
                             0,(sum, item) => sum + (item.total_price ?? 0));
+                        final discountAmount = items.fold<int>(
+                            0,(sum, item) => sum + (item.discount_price ?? 0));
                         const shipping = 0;
                         const vat = 0;
                         final totalAmt = subtotal + shipping + vat;
+
+                        final totalDiscount = subtotal - discountAmount;
+                        final shippingFeeAmount = (totalDiscount *10/100).round();
+                        final grandTotalAmount = discountAmount + shippingFeeAmount;
+                        final savings = subtotal - discountAmount;
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,20 +176,64 @@ class _CheckoutScreenState extends State<CheckoutScreen>
                             sectionTitle(orderSummary),
                             SummaryRow(label: subTotal,value: subtotal),
                             SizedBox(height: 0.8.h),
-                            SummaryRow(label: vatLabel,value: vat),
+                            SummaryRow(label: discount, value: totalDiscount, isDiscount: true),
                             SizedBox(height: 0.8.h),
-                            SummaryRow(label: shippingFee, value: shipping),
+                            SummaryRow(label: protectPromiseFee, value: shippingFeeAmount ),
                             Padding(
                               padding: EdgeInsets.symmetric(vertical: 1.2.h),
                               child: Divider(color: dividerColor,height: 1),
                             ),
-                            SummaryRow(label: total,value: totalAmt,isTotal: true),
+                            SummaryRow(label: total,value: grandTotalAmount,isTotal: true),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: successColor.withValues(alpha: .2),
+                                borderRadius: BorderRadius.circular(1.h),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.check_circle,
+                                    color: successColor,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: RichText(
+                                      text: TextSpan(
+                                        style: TextStyle(
+                                          fontSize: 14.sp,
+                                          color: blackColor.withValues(alpha: .7),
+                                        ),
+                                        children: [
+                                          const TextSpan(text: 'You saved '),
+                                          TextSpan(
+                                            text: Functions.formatInr(savings),
+                                            style: TextStyle(
+                                              color: successColor,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14.sp,
+                                            ),
+                                          ),
+                                          const TextSpan(text: ' on this order'),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         );
                       },
                     ),
+
                     SizedBox(height: 2.h),
-                    _promoCode(),
+                    // _promoCode(),
                   ],
                 ),
               ),

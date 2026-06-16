@@ -1,5 +1,6 @@
 class ApiConstants{
-  static const String baseUrl = 'https://identical-flattered-civil.ngrok-free.dev/';
+  // static const String baseUrl = 'https://identical-flattered-civil.ngrok-free.dev/';
+  static const String baseUrl = 'https://joins-accessories-techno-julia.trycloudflare.com/';
   static const String userId = 'user_id';
   static const String page = 'page';
   static const String search = 'search';

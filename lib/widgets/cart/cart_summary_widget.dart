@@ -11,6 +11,7 @@ class CartSummaryWidget extends StatelessWidget {
   final int shipping;
   final int vat;
   final int totalAmount;
+  final int discountAmount;
   final VoidCallback onCheckout;
 
   const CartSummaryWidget({
@@ -19,11 +20,16 @@ class CartSummaryWidget extends StatelessWidget {
     this.shipping = 0,
     this.vat = 0,
     required this.totalAmount,
+    this.discountAmount=0,
     required this.onCheckout,
   });
 
   @override
   Widget build(BuildContext context) {
+    final totalDiscount = subtotal - discountAmount;
+    final shippingFeeAmount = (totalDiscount *10/100).round();
+    final grandTotalAmount = discountAmount + shippingFeeAmount;
+    final savings = totalDiscount - shippingFeeAmount;
     return Container(
       padding: EdgeInsets.fromLTRB(4.w, 2.h, 4.w, 2.h),
       decoration: BoxDecoration(
@@ -35,22 +41,77 @@ class CartSummaryWidget extends StatelessWidget {
         children: [
           SummaryRow(label: subTotal, value: subtotal),
           SizedBox(height: 0.8.h),
-          SummaryRow(label: vatLabel, value: vat),
+          SummaryRow(label: discount, value: totalDiscount, isDiscount: true),
           SizedBox(height: 0.8.h),
-          SummaryRow(label: shippingFee, value: shipping),
+          SummaryRow(label: protectPromiseFee, value: shippingFeeAmount ),
           Padding(
             padding: EdgeInsets.symmetric(vertical: 1.2.h),
             child: Divider(color: dividerColor, height: 1),
           ),
-          SummaryRow(label: total, value: totalAmount, isTotal: true),
+          SummaryRow(label: total, value: grandTotalAmount, isTotal: true),
           SizedBox(height: 2.h),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            decoration: BoxDecoration(
+              color: successColor.withValues(alpha: .2),
+              borderRadius: BorderRadius.circular(1.h),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: successColor,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: blackColor.withValues(alpha: .7),
+                      ),
+                      children: [
+                        const TextSpan(text: 'You saved '),
+                        TextSpan(
+                          text: Functions.formatInr(savings),
+                          style: TextStyle(
+                            color: successColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                        const TextSpan(text: ' on this order'),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: CustomText(text: Functions.formatInr(totalAmount),
-                fontSize: 25.px,
-                style: CustomTextStyle.bold,),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomText(text: Functions.formatInr(totalAmount),
+                    fontSize: 12.px,
+                    style: CustomTextStyle.regular,
+                    color: greyColor,
+                      decoration: TextDecoration.lineThrough,
+                      decorationColor: greyColor,
+                    ),
+                    CustomText(text: Functions.formatInr(grandTotalAmount),
+                    fontSize: 25.px,
+                    style: CustomTextStyle.bold,),
+                  ],
+                ),
               ),
               Expanded(
                 child: CustomButton(
@@ -71,11 +132,14 @@ class SummaryRow extends StatelessWidget {
   final String label;
   final int value;
   final bool isTotal;
+  final bool isDiscount;
 
   const SummaryRow({
+    super.key,
     required this.label,
     required this.value,
     this.isTotal = false,
+    this.isDiscount = false,
   });
 
   @override
@@ -90,10 +154,11 @@ class SummaryRow extends StatelessWidget {
           color: isTotal ? blackColor : greyColor,
         ),
         CustomText(
-          text: Functions.formatInr(value),
+          text:
+          '${isDiscount ? '- ' : ''}${Functions.formatInr(value)}',
           style: isTotal ? CustomTextStyle.bold : CustomTextStyle.medium,
           fontSize: isTotal ? 18.sp : 14.sp,
-          color: blackColor,
+          color: isDiscount ? successColor : blackColor,
         ),
       ],
     );

@@ -63,11 +63,13 @@ class CartResponseModel {
 @JsonSerializable()
 class CartData {
   final int? grand_total;
+  final int? grand_discount_total;
   final int? total_items;
   final List<CartItem>? items;
 
   CartData({
     this.grand_total,
+    this.grand_discount_total,
     this.total_items,
     this.items,
   });
@@ -86,7 +88,10 @@ class CartItem {
   final int? quantity;
   final String? product_name;
   final int? product_price;
+  final int? discount;
+  final int? discount_price;
   final int? total_price;
+  final int? total_discount_price;
   final int is_synced;
   final String? product_image_url;
   final String? created_at;
@@ -99,8 +104,11 @@ class CartItem {
     this.quantity,
     this.product_name,
     this.product_price,
+    this.discount,
+    this.discount_price,
     this.is_synced = 0,
     this.total_price,
+    this.total_discount_price,
     this.product_image_url,
     this.created_at,
     this.updated_at,
@@ -115,7 +123,10 @@ class CartItem {
       quantity: item.quantity,
       product_name: item.product_name,
       product_price: item.product_price,
+      discount: item.discount,
+      discount_price: item.discount_price,
       total_price: item.total_price,
+      total_discount_price: item.total_discount_price,
       is_synced: item.is_synced,
       product_image_url: item.product_image_url ??
           json['image_url'] as String? ??
@@ -135,6 +146,9 @@ class CartItem {
         product_price: row['product_price'] as int?,
         quantity: row['quantity'] as int?,
         total_price: row['total_price'] as int?,
+        total_discount_price: row['total_discount_price'] as int?,
+        discount: row['discount'] as int?,
+        discount_price: row['discount_price'] as int?,
         is_synced: row['is_synced'] ?? 0,
         product_image_url: row['product_image_url'] as String?,
         created_at: row['created_at'] as String?,
@@ -149,7 +163,10 @@ class CartItem {
         'product_image_url': product_image_url,
         'quantity': quantity ?? 1,
         'is_synced': is_synced,
+        'discount': discount,
+        'discount_price': discount_price,
         'total_price': total_price ?? (product_price ?? 0) * (quantity ?? 1),
+        'total_discount_price': total_discount_price ?? (discount_price ?? 0) * (quantity ?? 1),
         'created_at': created_at ?? DateTime.now().toIso8601String(),
         'updated_at': updated_at ?? DateTime.now().toIso8601String(),
       };
@@ -166,6 +183,9 @@ class CartItem {
         product_name: product_name,
         product_price: product_price,
         total_price: total_price,
+        total_discount_price: total_discount_price,
+        discount: discount,
+        discount_price: discount_price,
         is_synced: is_synced ?? this.is_synced,
         product_image_url: product_image_url ?? this.product_image_url,
         created_at: created_at,
