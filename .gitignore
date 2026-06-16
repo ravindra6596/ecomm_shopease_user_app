@@ -46,3 +46,39 @@ app.*.map.json
 
 /android/app/src/main/res/values/google_map_api.xml
 /android/app/google-services.json
+
+# Generated files
+*.g.dart
+*.g.json
+*.g.mocks.dart
+*.freezed.dart
+
+# Flutter build outputs
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/FlutterPluginRegistrant/
+ios/Pods/
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcodeproj/xcuserdata/
+android/.gradle/
+android/app/build/
+android/app/intermediates/
+android/app/outputs/
+android/app/src/debug/
+android/app/src/profile/
+android/app/src/release/
+
+# Other generated files
+*.apk
+*.aab
+*.app
+*.dSYM
+*.hprof
+*.tmp
+*.temp
+*.zip
+*.tar.gz
+*.tgz
+*.bak
+*.orig
