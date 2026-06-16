@@ -52,6 +52,8 @@ app.*.map.json
 *.g.json
 *.g.mocks.dart
 *.freezed.dart
+*.gr.dart
+*.config.dart
 
 # Flutter build outputs
 ios/Flutter/Flutter.framework
