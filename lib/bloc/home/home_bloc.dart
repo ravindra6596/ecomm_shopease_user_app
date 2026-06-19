@@ -3,6 +3,7 @@ import 'package:e_comm_user/core/exception_handler.dart';
 import 'package:e_comm_user/di/configure.dart';
 import 'package:e_comm_user/models/home_response_model.dart';
 import 'package:e_comm_user/repository/home_repository.dart';
+import 'package:e_comm_user/utils/functions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
@@ -27,6 +28,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       switch (result) {
         case Success<HomeResponseModel, Exception>():
           await emit(HomeLoaded(result.data,0));
+          final addressData = result.data.data?.delivery_address;
+          final address = [ addressData?.address_line, addressData?.city,
+            addressData?.state, addressData?.country, addressData?.pincode,
+          ].where((e) => e != null && e.isNotEmpty).join(", ");
+          addressStreamController.add(address);
           break;
         case Failure<HomeResponseModel, Exception>():
           emit(HomeError(result.error.toString()));

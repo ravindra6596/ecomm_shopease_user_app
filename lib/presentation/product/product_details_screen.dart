@@ -11,6 +11,7 @@ import 'package:e_comm_user/bloc/wishlist/wishlist_event.dart';
 import 'package:e_comm_user/bloc/wishlist/wishlist_state.dart';
 import 'package:e_comm_user/routes/app_routes.dart';
 import 'package:e_comm_user/widgets/custom_appbar.dart';
+import 'package:e_comm_user/widgets/error_image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -131,17 +132,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>   with Sing
                       final productState =  productBloc.state;
                       if (productState is ProductDetailsSuccessState) {
                         final product = productState.product;
-                        wishlistBloc.add(
-                          AddToWishlistEvent(
-                            widget.productId,
-                            product.name ?? '',
-                            product.price ?? 0,
-                            product.discount ?? 0,
-                            product.discount_price ?? 0,
-                            productImageUrl: product.images  ?.isNotEmpty ==  true
-                                ? product.images!.first.image_url: null,
-                          ),
-                        );
+                        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                          wishlistBloc.add(
+                            AddToWishlistEvent(
+                              widget.productId,
+                              product.name ?? '',
+                              product.price ?? 0,
+                              product.discount ?? 0,
+                              product.discount_price ?? 0,
+                              productImageUrl: product.images  ?.isNotEmpty ==  true
+                                  ? product.images!.first.image_url: null,
+                            ),
+                          );
+                        },);
                         Functions.showCustomSnackBar(
                           context,
                           message: addedToWishlist,
@@ -345,17 +348,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>   with Sing
 
   Widget _buildImageCarousel(List<ProductImage> images) {
     if (images.isEmpty) {
-      return Container(
+      return SizedBox(
         height: 40.h,
-        color: lightGreyColor,
-        child: Center(
-          child: CustomText(
-            text: noImagesAvailable,
-            style: CustomTextStyle.medium,
-            fontSize: 14.sp,
-            color: greyColor,
-          ),
-        ),
+          width: double.infinity,
+          child: ErrorImageWidget(),
       );
     }
 
@@ -388,17 +384,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>   with Sing
                         placeholder: (context, url) => const Center(
                           child: CircularProgressIndicator(),
                         ),
-                        errorWidget: (context, url, error) => Container(
-                          color: lightGreyColor,
-                          child: Center(
-                            child: CustomText(
-                              text: noImagesAvailable,
-                              style: CustomTextStyle.medium,
-                              fontSize: 14.sp,
-                              color: greyColor,
-                            ),
-                          ),
-                        ),
+                        errorWidget: (context, url, error) => ErrorImageWidget(),
                       ),
                     );
                   },

@@ -1,14 +1,14 @@
 // ignore_for_file: must_be_immutable
-import 'dart:io';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:e_comm_user/bloc/address/address_bloc.dart';
 import 'package:e_comm_user/bloc/address/address_event.dart';
 import 'package:e_comm_user/bloc/order/order_bloc.dart';
 import 'package:e_comm_user/bloc/order/order_event.dart';
 import 'package:e_comm_user/bloc/order/order_state.dart';
+import 'package:e_comm_user/core/shared_pref_helper.dart';
 import 'package:e_comm_user/di/configure.dart';
 import 'package:e_comm_user/routes/app_routes.dart';
+import 'package:e_comm_user/utils/apis.dart';
 import 'package:e_comm_user/utils/colors.dart';
 import 'package:e_comm_user/utils/constants.dart';
 import 'package:e_comm_user/utils/functions.dart';
@@ -18,21 +18,75 @@ import 'package:e_comm_user/widgets/cart/cart_summary_widget.dart';
 import 'package:e_comm_user/widgets/custom_appbar.dart';
 import 'package:e_comm_user/widgets/custom_button.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
+import 'package:e_comm_user/widgets/saved_price_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 @RoutePage()
-class OrderDetailsScreen extends StatelessWidget {
+class OrderDetailsScreen extends StatefulWidget {
   OrderDetailsScreen({super.key, this.orderId = 0,this.isFrom});
   String? isFrom;
   int orderId;
+  @override
+  State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
+
+  static Widget infoTile({
+      String title = '',
+      String value = '',
+      bool isHorizontal = false,
+  }) {
+    return isHorizontal? Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CustomText(
+          text: title,
+          color: greyColor.withValues(alpha: .6),
+        ),
+        SizedBox(width: 2.w),
+        CustomText(
+          text: value,
+          style: CustomTextStyle.bold,
+          fontSize: 15.px,
+        ),
+      ],
+    ):
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CustomText(
+          text: title,
+            color: greyColor.withValues(alpha: .6),
+        ),
+        SizedBox(height: 1.h),
+        CustomText(
+          text: value,
+            style: CustomTextStyle.bold,
+            fontSize: 15.px,
+        ),
+      ],
+    );
+  }
+
+}
+
+class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   OrderBloc orderBloc = getIt.get<OrderBloc>();
+
   AddressBloc addressBloc = getIt.get<AddressBloc>();
+
+  String appVersion = '';
+
+  device() async {
+    appVersion = await Functions.deviceOSInformation();
+  }
+@override
+  void initState() {
+    device();
+    super.initState();
+  }
   void handleBack(BuildContext context) {
-    if (isFrom == orderSuccess) {
+    if (widget.isFrom == orderSuccess) {
       context.router.replaceAll([
         MainRoute(
           key: UniqueKey(),
@@ -45,6 +99,7 @@ class OrderDetailsScreen extends StatelessWidget {
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
 
@@ -56,7 +111,7 @@ class OrderDetailsScreen extends StatelessWidget {
         }
       },
       child: BlocProvider(
-        create: (context) => orderBloc..add(OrderDetailsEvent(orderId)),
+        create: (context) => orderBloc..add(OrderDetailsEvent(widget.orderId)),
         child: Scaffold(
           backgroundColor: whiteColor,
           appBar: CustomAppBar(
@@ -67,6 +122,7 @@ class OrderDetailsScreen extends StatelessWidget {
           ),
           body: BlocConsumer<OrderBloc, OrderState>(
             listener: (context, state) async {
+
               if (state is OrderDeletedState) {
                 context.router.replaceAll([
                   MainRoute(
@@ -77,17 +133,14 @@ class OrderDetailsScreen extends StatelessWidget {
                 Functions.showCustomSnackBar(context,message:  state.orderDetailsResponseModel.message ?? '',backgroundColor: errorColor);
               }
               if (state is OrderInvoiceLoadedState) {
-
-                // final dir = await getApplicationDocumentsDirectory();
-                Directory? downloadsDir;
-                if (Platform.isAndroid) {
-                  downloadsDir = Directory('/storage/emulated/0/Download');
-                } else {
-                  downloadsDir = await getApplicationDocumentsDirectory();
-                }
-                final file = File("${downloadsDir.path}/ShopEase_Invoice_${state.orderId}.pdf");
-                await file.writeAsBytes(state.bytes);
-                await OpenFilex.open(file.path);
+                // await Functions.saveAndShareInvoice(
+                //   bytes: state.bytes,
+                //   orderId: state.orderId,
+                // );
+                final url = "${ApiConstants.baseUrl}orders/${state.orderId}/invoice";
+                final token = await SharedPrefHelper.getAccessToken();
+                Functions.downloadInvoice(url, "ShopEase_Invoice_${state.orderId}.pdf", token.toString());
+                // downloadFileSaveStorage(context, url, appVersion, "ShopEase_Invoice_${state.orderId}.pdf");
               }
             },
               buildWhen: (previous, current) {
@@ -101,7 +154,8 @@ class OrderDetailsScreen extends StatelessWidget {
                 }
                 if (state is OrderErrorState) {
                   return Center(
-                    child: Text(state.message),
+                    child: CustomText(
+                        text:state.message),
                   );
                 }
                 if (state is OrderDetailsSuccessState) {
@@ -170,13 +224,13 @@ class OrderDetailsScreen extends StatelessWidget {
                               Row(
                                 children: [
                                   Expanded(
-                                    child: infoTile(
+                                    child: OrderDetailsScreen.infoTile(
                                       title: payment,
                                       value: orderData?.payment_method?.toUpperCase() ?? '',
                                     ),
                                   ),
                                   Expanded(
-                                    child: infoTile(
+                                    child: OrderDetailsScreen.infoTile(
                                       title: total,
                                       value: "₹${Functions.formatPrice(displayAmount)}",                                    ),
                                   ),
@@ -305,7 +359,7 @@ class OrderDetailsScreen extends StatelessWidget {
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             SizedBox(height: 1.h),
-                                            infoTile(title: qty, value: item?.quantity?.toString() ?? '',isHorizontal: true),
+                                            OrderDetailsScreen.infoTile(title: qty, value: item?.quantity?.toString() ?? '',isHorizontal: true),
                                             SizedBox(height: 1.h),
                                           ],
                                         ),
@@ -327,48 +381,9 @@ class OrderDetailsScreen extends StatelessWidget {
                             child: Divider(color: dividerColor,height: 1),
                           ),
                           SummaryRow(label: total,value: displayAmount,isTotal: true),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: successColor.withValues(alpha: .2),
-                              borderRadius: BorderRadius.circular(1.h),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  color: successColor,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        color: blackColor.withValues(alpha: .7),
-                                      ),
-                                      children: [
-                                        const TextSpan(text: 'You saved '),
-                                        TextSpan(
-                                          text: Functions.formatInr(savings),
-                                          style: TextStyle(
-                                            color: successColor,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14.sp,
-                                          ),
-                                        ),
-                                        const TextSpan(text: ' on this order'),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 1.h),
+                            child: SavedPriceWidget(savingAmount: savings),
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -466,41 +481,4 @@ class OrderDetailsScreen extends StatelessWidget {
       ),
     );
   }
-  static Widget infoTile({
-      String title = '',
-      String value = '',
-      bool isHorizontal = false,
-  }) {
-    return isHorizontal? Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          text: title,
-          color: greyColor.withValues(alpha: .6),
-        ),
-        SizedBox(width: 2.w),
-        CustomText(
-          text: value,
-          style: CustomTextStyle.bold,
-          fontSize: 15.px,
-        ),
-      ],
-    ):
-    Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CustomText(
-          text: title,
-            color: greyColor.withValues(alpha: .6),
-        ),
-        SizedBox(height: 1.h),
-        CustomText(
-          text: value,
-            style: CustomTextStyle.bold,
-            fontSize: 15.px,
-        ),
-      ],
-    );
-  }
-
 }

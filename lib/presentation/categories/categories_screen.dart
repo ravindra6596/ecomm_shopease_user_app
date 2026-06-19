@@ -13,6 +13,7 @@ import 'package:e_comm_user/utils/strings.dart';
 import 'package:e_comm_user/widgets/custom_appbar.dart';
 import 'package:e_comm_user/widgets/custom_button.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
+import 'package:e_comm_user/widgets/error_image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -63,6 +64,12 @@ class _CategoriesScreenState extends State<CategoriesScreen>  with SingleTickerP
       appBar: CustomAppBar(
         title: categories,
         showBackButton: false,
+        action: IconButton(
+          onPressed: () {
+            getIt<AppRoutes>().push(ProductsRoute());
+          },
+          icon: Icon(Icons.search),
+        ),
       ),
       body: BlocProvider.value(
         value: categoryBloc,
@@ -111,166 +118,160 @@ class _CategoriesScreenState extends State<CategoriesScreen>  with SingleTickerP
               final detailsError = state.detailsError;
               final products = selectedCategory?.products ?? [];
 
-              return Row(
-                children: [
-                  // ── LEFT: Category List ──────────────────────────────────
-                  Container(
-                    width: 90,
-                    decoration: BoxDecoration(
-                    color: whiteColor,
-                      border: Border(right: BorderSide(color: blackColor,width: .2))
-                    ),
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: (scrollInfo) {
-                        if (!hasMoreData || categoryBloc.isLoadingMore) {
-                          return false;
-                        }
-                        if (scrollInfo.metrics.pixels >=
-                            scrollInfo.metrics.maxScrollExtent - 50) {
-                          categoryBloc.add(
-                            CategoryLoadEvent(
-                              categoryBloc.pageNo + 1,
-                              limit,
-                            ),
-                          );
-                        }
-                        return false;
-                      },
-                      child: ListView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount:
-                        categories.length + (hasMoreData ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          // Pagination loader at the bottom
-                          if (index == categories.length) {
-                            return const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: Center(
-                                child: SizedBox(
-                                  height: 18,
-                                  width: 18,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2),
-                                ),
+              return RefreshIndicator(
+                onRefresh: () async{
+                  categoryBloc.add(CategoryLoadEvent(1, limit));
+                },
+                child: Row(
+                  children: [
+                    // ── LEFT: Category List ──────────────────────────────────
+                    Container(
+                      width: 90,
+                      decoration: BoxDecoration(
+                      color: whiteColor,
+                        border: Border(right: BorderSide(color: blackColor,width: .2))
+                      ),
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (scrollInfo) {
+                          if (!hasMoreData || categoryBloc.isLoadingMore) {
+                            return false;
+                          }
+                          if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 50) {
+                            categoryBloc.add(
+                              CategoryLoadEvent(
+                                categoryBloc.pageNo + 1,
+                                limit,
                               ),
                             );
                           }
+                          return false;
+                        },
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount:
+                          categories.length + (hasMoreData ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            // Pagination loader at the bottom
+                            if (index == categories.length) {
+                              return const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: Center(
+                                  child: SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              );
+                            }
 
-                          final category = categories[index];
-                          final isSelected = selectedIndex == index;
-                          final img =
-                          category.images?.isNotEmpty == true
-                              ? category.images!.first.image_url ?? ''
-                              : '';
+                            final category = categories[index];
+                            final isSelected = selectedIndex == index;
+                            final img =
+                            category.images?.isNotEmpty == true
+                                ? category.images!.first.image_url ?? ''
+                                : '';
 
-                          return GestureDetector(
-                            onTap: () {
-                              if (selectedIndex == index) return;
-                              categoryBloc.add(CategorySelectEvent(
-                                category.id ?? 0,
-                                index,
-                              ));
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 6,
-                              ),
-                              padding:
-                              const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? primaryColor.withValues(alpha: .12)
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(.5.h),
-                                border: isSelected
-                                    ? Border.all(
-                                  color: primaryColor.withValues(
-                                      alpha: .3),
-                                  width: 1,
-                                )
-                                    : null,
-                              ),
-                              child: Column(
-                                children: [
-                                  // Category image
-                                  img.isNotEmpty
-                                      ? CachedNetworkImage(
-                                    imageUrl: img,
-                                    width: 32,
-                                    height: 32,
-                                    fit: BoxFit.contain,
-                                    placeholder: (_, __) =>
-                                    const SizedBox(
+                            return GestureDetector(
+                              onTap: () {
+                                if (selectedIndex == index) return;
+                                categoryBloc.add(CategorySelectEvent(
+                                  category.id ?? 0,
+                                  index,
+                                ));
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                  horizontal: 6,
+                                ),
+                                padding:
+                                const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? primaryColor.withValues(alpha: .12)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(.5.h),
+                                  border: isSelected
+                                      ? Border.all(
+                                    color: primaryColor.withValues(
+                                        alpha: .3),
+                                    width: 1,
+                                  )
+                                      : null,
+                                ),
+                                child: Column(
+                                  children: [
+                                    // Category image
+                                    img.isNotEmpty
+                                        ? CachedNetworkImage(
+                                      imageUrl: img,
                                       width: 32,
                                       height: 32,
-                                      child: Center(
-                                        child:
-                                        CircularProgressIndicator(
-                                            strokeWidth: 1.5),
+                                      fit: BoxFit.contain,
+                                      placeholder: (_, __) =>
+                                      const SizedBox(
+                                        width: 32,
+                                        height: 32,
+                                        child: Center(
+                                          child:
+                                          CircularProgressIndicator(
+                                              strokeWidth: 1.5),
+                                        ),
+                                      ),
+                                      errorWidget: (_, __, ___) =>ErrorImageWidget(),
+                                    )
+                                        : ErrorImageWidget(),
+
+                                    const SizedBox(height: 6),
+
+                                    // Category name
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4),
+                                      child: CustomText(
+                                        text: category.name ?? '',
+                                        textAlign: TextAlign.center,
+                                        fontSize: 11,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: isSelected
+                                            ? CustomTextStyle.bold
+                                            : CustomTextStyle.regular,
+                                        color: isSelected
+                                            ? primaryColor
+                                            : greyColor,
                                       ),
                                     ),
-                                    errorWidget: (_, __, ___) =>
-                                    const Icon(
-                                      Icons.image_not_supported,
-                                      size: 20,
-                                      color: Colors.grey,
-                                    ),
-                                  )
-                                      : const Icon(
-                                    Icons.category,
-                                    size: 28,
-                                    color: Colors.grey,
-                                  ),
-
-                                  const SizedBox(height: 6),
-
-                                  // Category name
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 4),
-                                    child: CustomText(
-                                      text: category.name ?? '',
-                                      textAlign: TextAlign.center,
-                                      fontSize: 11,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: isSelected
-                                          ? CustomTextStyle.bold
-                                          : CustomTextStyle.regular,
-                                      color: isSelected
-                                          ? primaryColor
-                                          : greyColor,
-                                    ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  ),
 
-                  // ── RIGHT: Category Details + Products ───────────────────
-                  Expanded(
-                    child: isLoadingDetails
-                        ? const Center(child: CircularProgressIndicator())
-                        : detailsError != null
-                        ? _buildDetailsError(detailsError)
-                        : selectedCategory == null
-                        ?   Center(
-                      child: CustomText(
-                        text: selectACategory,
-                        fontSize: 14,
-                        color: greyColor,
-                      ),
-                    )
-                        :  _buildCategoryDetails(context, selectedCategory, products),
+                    // ── RIGHT: Category Details + Products ───────────────────
+                    Expanded(
+                      child: isLoadingDetails
+                          ? const Center(child: CircularProgressIndicator())
+                          : detailsError != null
+                          ? _buildDetailsError(detailsError)
+                          : selectedCategory == null
+                          ?   Center(
+                        child: CustomText(
+                          text: selectACategory,
+                          fontSize: 14,
+                          color: greyColor,
+                        ),
+                      )
+                          :  _buildCategoryDetails(context, selectedCategory, products),
 
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               );
             }
 
@@ -462,7 +463,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>  with SingleTickerP
                                   crossAxisCount: 2,
                                   crossAxisSpacing: 12,
                                   mainAxisSpacing: 12,
-                                  childAspectRatio: 0.72,
+                                  childAspectRatio: 0.5,
                                 ),
                                 itemBuilder: (context, index) {
                                     final product = products[index];
@@ -518,17 +519,9 @@ class _CategoriesScreenState extends State<CategoriesScreen>  with SingleTickerP
                       child: CircularProgressIndicator(
                           strokeWidth: 2),
                     ),
-                    errorWidget: (_, __, ___) => const Icon(
-                      Icons.image_not_supported,
-                      size: 36,
-                      color: Colors.grey,
-                    ),
+                    errorWidget: (_, __, ___) => ErrorImageWidget(),
                   )
-                      : const Icon(
-                    Icons.image,
-                    size: 36,
-                    color: Colors.grey,
-                  ),
+                      : ErrorImageWidget(),
                 ),
               ),
             ),

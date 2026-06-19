@@ -3,6 +3,7 @@ import 'package:e_comm_user/models/cart_model.dart';
 import 'package:e_comm_user/utils/colors.dart';
 import 'package:e_comm_user/utils/functions.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
+import 'package:e_comm_user/widgets/error_image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -146,17 +147,9 @@ class ProductThumbnail extends StatelessWidget {
                 placeholder: (_, __) => const Center(
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                errorWidget: (_, __, ___) => Icon(
-                  Icons.image_not_supported_outlined,
-                  color: greyColor,
-                  size: 24.sp,
-                ),
+                errorWidget: (_, __, ___) => ErrorImageWidget(),
               )
-            : Icon(
-                Icons.shopping_bag_outlined,
-                color: greyColor,
-                size: 24.sp,
-              ),
+            : ErrorImageWidget()
       ),
     );
   }

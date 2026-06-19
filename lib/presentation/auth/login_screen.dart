@@ -153,6 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               Checkbox(
                                 value: rememberMe,
+                                activeColor: primaryColor,
                                 onChanged: (value) {
                                   authBloc.add(ToggleRememberMeEvent(value ?? false));
                                 },

@@ -1,14 +1,13 @@
 // ============================================================
-// ARROWS – PUZZLE ESCAPE  (Flutter BLoC, single file)
+// ARROWS – PUZZLE ESCAPE  (Highly Refined UI & Mechanics)
 //
 // pubspec.yaml dependencies:
 //   flutter_bloc: ^8.1.6
 //   equatable: ^2.0.5
-//
-// Run: flutter pub get && flutter run
 // ============================================================
 
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -42,23 +41,44 @@ extension ArrowDirExt on ArrowDir {
 
 class ArrowCell {
   final int id;
-  final int row;
-  final int col;
+  final List<Offset> path;
   final ArrowDir dir;
   final bool removed;
   final bool removing;
 
-  const ArrowCell({
+  ArrowCell({
     required this.id,
-    required this.row,
-    required this.col,
+    required List<Offset> path,
     required this.dir,
     this.removed = false,
     this.removing = false,
-  });
+  }) : this.path = _normalizePath(path, dir);
 
-  ArrowCell copyWith({bool? removed,bool? removing,}) => ArrowCell(
-    id: id, row: row, col: col, dir: dir,
+  static List<Offset> _normalizePath(List<Offset> originalPath, ArrowDir dir) {
+    if (originalPath.isEmpty) return [];
+    if (originalPath.length == 1) {
+      final cell = originalPath.first;
+      final (dr, dc) = dir.exitDelta();
+      return [
+        Offset(cell.dx - dc * 0.35, cell.dy - dr * 0.35),
+        cell,
+      ];
+    }
+    return originalPath;
+  }
+
+  int get row => path.isEmpty ? 0 : path.last.dy.round();
+  int get col => path.isEmpty ? 0 : path.last.dx.round();
+
+  ArrowCell copyWith({
+    bool? removed,
+    bool? removing,
+    List<Offset>? path,
+    ArrowDir? dir,
+  }) => ArrowCell(
+    id: id,
+    path: path ?? this.path,
+    dir: dir ?? this.dir,
     removed: removed ?? this.removed,
     removing: removing ?? this.removing,
   );
@@ -70,156 +90,224 @@ class Level {
   final int cols;
   final List<ArrowCell> arrows;
   final String title;
-    List<PathLine> ? paths =[];
-    Level({
+
+  Level({
     required this.number,
     required this.rows,
     required this.cols,
     required this.arrows,
     required this.title,
-    this.paths
   });
 }
 
 // ═══════════════════════════════════════════════════════════
-// LEVEL DATA — 5 levels
+// LEVEL DATA
 // ═══════════════════════════════════════════════════════════
 
 int _gid = 0;
-ArrowCell _a(int r, int c, ArrowDir d) => ArrowCell(id: _gid++, row: r, col: c, dir: d);
+ArrowCell _a(List<Offset> path, ArrowDir dir) => ArrowCell(id: _gid++, path: path, dir: dir);
+ArrowCell _s(double c, double r, ArrowDir dir) => ArrowCell(id: _gid++, path: [Offset(c, r)], dir: dir);
 
 List<Level> buildLevels() {
-  // ── Level 1: 4×4 ring ──────────────────────────────────
+  // ── Level 1: Warm Up (3×3) ──────────────────────────────────
   _gid = 0;
   final l1 = Level(
     number: 1, rows: 3, cols: 3, title: 'Warm Up',
     arrows: [
-      _a(0, 1, ArrowDir.right),
-      _a(1, 1, ArrowDir.right),
-      _a(2, 1, ArrowDir.right),
+      _s(0, 1, ArrowDir.right),
+      _s(1, 1, ArrowDir.down),
+      _s(1, 2, ArrowDir.left),
     ],
   );
 
-  // ── Level 2: 4×4 ring ──────────────────────────────────
+  // ── Level 2: Winding Intro (3×3) ───────────────────────────
   _gid = 0;
   final l2 = Level(
-    number: 2, rows: 4, cols: 4, title: 'Warm Up',
+    number: 2, rows: 3, cols: 3, title: 'Winding Intro',
     arrows: [
-      _a(0, 0, ArrowDir.right),
-      _a(0, 3, ArrowDir.down),
-      _a(3, 3, ArrowDir.left),
-      _a(3, 1, ArrowDir.up),
+      _s(0, 0, ArrowDir.right),
+      _a([Offset(1, 0), Offset(1, 1), Offset(2, 1)], ArrowDir.right),
+      _s(2, 2, ArrowDir.up),
     ],
   );
-  // ── Level 3: 4×4 ring ──────────────────────────────────
+
+  // ── Level 3: Cross Roads (4×4) ─────────────────────────────
   _gid = 0;
   final l3 = Level(
-    number: 3, rows: 4, cols: 4, title: 'Warm Up',
+    number: 3, rows: 4, cols: 4, title: 'Cross Roads',
     arrows: [
-      _a(0, 0, ArrowDir.right),
-      _a(0, 1, ArrowDir.right),
-      _a(0, 2, ArrowDir.down),
-      _a(0, 3, ArrowDir.down),
-
-      _a(1, 3, ArrowDir.down),
-      _a(2, 3, ArrowDir.left),
-
-      _a(3, 0, ArrowDir.up),
-      _a(3, 1, ArrowDir.left),
+      _s(0, 0, ArrowDir.down),
+      _a([Offset(0, 3), Offset(1, 3), Offset(1, 2), Offset(2, 2)], ArrowDir.right),
+      _s(3, 2, ArrowDir.up),
+      _a([Offset(2, 0), Offset(2, 1), Offset(3, 1)], ArrowDir.right),
     ],
   );
 
-// ── Level 4: 5×5 cross ─────────────────────────────────
+  // ── Level 4: Spiral (5×5) ──────────────────────────────────
   _gid = 0;
   final l4 = Level(
-    number: 4, rows: 5, cols: 5, title: 'Cross Roads',
+    number: 4, rows: 5, cols: 5, title: 'Double Spiral',
     arrows: [
-      _a(0, 2, ArrowDir.left),
-      _a(1, 1, ArrowDir.right),
-      _a(1, 3, ArrowDir.down),
-      _a(1, 2, ArrowDir.right),
-      _a(2, 0, ArrowDir.right),
-      _a(2, 1, ArrowDir.up),
-      _a(2, 2, ArrowDir.right),
-      _a(2, 4, ArrowDir.right),
-      _a(3, 1, ArrowDir.up),
-      _a(3, 2, ArrowDir.left),
-      _a(4, 2, ArrowDir.up),
+      _s(0, 0, ArrowDir.right),
+      _a([Offset(1, 0), Offset(2, 0), Offset(2, 1), Offset(2, 2)], ArrowDir.down),
+      _s(2, 4, ArrowDir.left),
+      _a([Offset(0, 2), Offset(0, 3), Offset(1, 3), Offset(2, 3)], ArrowDir.right),
+      _s(4, 2, ArrowDir.up),
     ],
   );
 
-// ── Level 3: 5×5 spiral ────────────────────────────────
+  // ── Level 5: Grand Escape (Your Verified Code) ──────────────
   _gid = 0;
   final l5 = Level(
-    number: 5, rows: 5, cols: 5, title: 'Spiral',
+    number: 5, rows: 11, cols: 8, title: 'Grand Escape',
     arrows: [
+      // 1. Top left single lone arrow pointing up
+      _a([Offset(1, 3), Offset(1, 1)], ArrowDir.up),
 
-      _a(0, 0, ArrowDir.right),
-      _a(0, 1, ArrowDir.right),
-      _a(0, 2, ArrowDir.up),
-      _a(0, 3, ArrowDir.right),
-      _a(0, 4, ArrowDir.down),
+      // 2. Far left edge long vertical line that goes down and wraps around the bottom right
+      _a([Offset(0, 2), Offset(0, 10), Offset(6, 10)], ArrowDir.right),
 
-      _a(1, 0, ArrowDir.up),
-      _a(1, 1, ArrowDir.right),
-      _a(1, 2, ArrowDir.right),
-      _a(1, 3, ArrowDir.down),
-      _a(1, 4, ArrowDir.down),
+      // 3. Second vertical line down in col 2 (top segment)
+      _a([Offset(2, 1), Offset(2, 4)], ArrowDir.down),
 
-      _a(2, 0, ArrowDir.up),
-      _a(2, 1, ArrowDir.left),
-      _a(2, 2, ArrowDir.down),
-      _a(2, 3, ArrowDir.down),
-      _a(2, 4, ArrowDir.right),
+      // 4. Second vertical line down in col 2 (bottom segment)
+      _a([Offset(2, 5), Offset(2, 8)], ArrowDir.down),
 
-      _a(3, 0, ArrowDir.down),
-      _a(3, 1, ArrowDir.up),
-      _a(3, 2, ArrowDir.left),
-      _a(3, 3, ArrowDir.right),
-      _a(3, 4, ArrowDir.right),
+      // 5. Downward hook path in the center-left columns
+      _a([Offset(3, 1), Offset(4, 1), Offset(4, 3)], ArrowDir.down),
 
-      _a(4, 0, ArrowDir.left),
-      _a(4, 1, ArrowDir.left),
-      _a(4, 2, ArrowDir.left),
-      _a(4, 3, ArrowDir.left),
-      _a(4, 4, ArrowDir.left),
+      // 7. Top right winding hook path going left
+      _a([Offset(5, 1), Offset(7, 1), Offset(7, 3), Offset(5, 3)], ArrowDir.left),
 
+      // 8. Outer right vertical path going down
+      _a([Offset(7, 4), Offset(7, 7)], ArrowDir.down),
+
+      // 9. Right middle snake pathway weaving back to the right
+      _a([Offset(4, 4), Offset(6, 4), Offset(6, 5), Offset(4, 5)], ArrowDir.left),
+
+      // 10. Center tiny path going right
+      _a([Offset(4, 6), Offset(5, 6)], ArrowDir.right),
+
+      // 11. Large bottom inner container loop going left
+      _a([Offset(3, 7), Offset(3, 9), Offset(7, 9), Offset(7, 8), Offset(5, 8)], ArrowDir.left),
+
+      // 12. Inner horizontal path going left
+      _a([Offset(6, 7), Offset(4, 7)], ArrowDir.left),
     ],
   );
 
+  // ── Level 6: The Interlock Chamber (9×9) ───────────────────
+  // Focuses on intersecting loops where unhooking one arrow opens the path for two others.
+  // ── Level 6: Interlock Chamber (8×8) ────────────────────────
+  _gid = 0;
+  final l6 = Level(
+    number: 6, rows: 8, cols: 8, title: 'Interlock Chamber',
+    arrows: [
+      _a([Offset(1, 0), Offset(1, 4)], ArrowDir.down),
+      _a([Offset(0, 5), Offset(3, 5), Offset(3, 2)], ArrowDir.up),
+      _a([Offset(2, 7), Offset(2, 6), Offset(5, 6)], ArrowDir.right),
+      _a([Offset(6, 0), Offset(4, 0), Offset(4, 3)], ArrowDir.down),
+      _a([Offset(7, 6), Offset(7, 2), Offset(5, 2)], ArrowDir.left),
+      _s(5, 0, ArrowDir.up),
+      _s(0, 2, ArrowDir.left),
+      _s(6, 5, ArrowDir.right),
+    ],
+  );
 
-  // return [l6];
-  return [l1, l2, l3, l4, l5];
+  // ── Level 7: Twisted Grid (9×9) ────────────────────────────
+  _gid = 0;
+  final l7 = Level(
+    number: 7, rows: 9, cols: 9, title: 'Twisted Grid',
+    arrows: [
+      _a([Offset(0, 1), Offset(0, 8), Offset(4, 8)], ArrowDir.right),
+      _a([Offset(1, 1), Offset(4, 1), Offset(4, 3)], ArrowDir.down),
+      _a([Offset(2, 4), Offset(2, 2), Offset(6, 2)], ArrowDir.right),
+      _a([Offset(3, 6), Offset(1, 6), Offset(1, 7)], ArrowDir.down),
+      _a([Offset(5, 8), Offset(8, 8), Offset(8, 5)], ArrowDir.up),
+      _a([Offset(8, 1), Offset(8, 4), Offset(6, 4)], ArrowDir.left),
+      _a([Offset(7, 5), Offset(5, 5), Offset(5, 7)], ArrowDir.down),
+      _s(3, 2, ArrowDir.up),
+      _s(7, 6, ArrowDir.right),
+    ],
+  );
+
+  // ── Level 8: Mega Maze Pit (10×10) ──────────────────────────
+  _gid = 0;
+  final l8 = Level(
+    number: 8, rows: 10, cols: 10, title: 'Mega Maze Pit',
+    arrows: [
+      _a([Offset(1, 1), Offset(8, 1), Offset(8, 3)], ArrowDir.down),
+      _a([Offset(0, 2), Offset(0, 9), Offset(9, 9)], ArrowDir.right),
+      _a([Offset(2, 3), Offset(5, 3), Offset(5, 5)], ArrowDir.down),
+      _a([Offset(3, 5), Offset(3, 4), Offset(7, 4)], ArrowDir.right),
+      _a([Offset(4, 7), Offset(1, 7), Offset(1, 8)], ArrowDir.down),
+      _a([Offset(6, 9), Offset(6, 7), Offset(9, 7)], ArrowDir.down),
+      _a([Offset(7, 1), Offset(7, 4), Offset(9, 4)], ArrowDir.right),
+      _s(2, 5, ArrowDir.up),
+      _s(6, 2, ArrowDir.left),
+    ],
+  );
+
+  // ── Level 9: Ultimate Labyrinth (10×11) ─────────────────────
+  _gid = 0;
+  final l9 = Level(
+    number: 9, rows: 11, cols: 10, title: 'Ultimate Labyrinth',
+    arrows: [
+      _a([Offset(1, 1), Offset(1, 5), Offset(3, 5), Offset(3, 2)], ArrowDir.up),
+      _a([Offset(0, 2), Offset(0, 10), Offset(8, 10)], ArrowDir.right),
+      _a([Offset(2, 1), Offset(5, 1), Offset(5, 4), Offset(2, 4)], ArrowDir.left),
+      _a([Offset(4, 0), Offset(8, 0), Offset(8, 3)], ArrowDir.down),
+      _a([Offset(6, 9), Offset(2, 9), Offset(2, 7)], ArrowDir.up),
+      _a([Offset(7, 5), Offset(7, 8), Offset(4, 8)], ArrowDir.left),
+      _s(4, 3, ArrowDir.right),
+      _s(6, 1, ArrowDir.up),
+      _s(8, 7, ArrowDir.right),
+    ],
+  );
+
+  // ── Level 10: Escape Mastermind (11×11) ────────────────────
+  _gid = 0;
+  final l10 = Level(
+    number: 10, rows: 11, cols: 11, title: 'Escape Mastermind',
+    arrows: [
+      _a([Offset(1, 1), Offset(8, 1), Offset(8, 3), Offset(6, 3)], ArrowDir.left),
+      _a([Offset(0, 2), Offset(0, 10), Offset(9, 10)], ArrowDir.right),
+      _a([Offset(2, 3), Offset(5, 3), Offset(5, 7), Offset(2, 7)], ArrowDir.left),
+      _a([Offset(3, 2), Offset(3, 5), Offset(1, 5), Offset(1, 9)], ArrowDir.down),
+      _a([Offset(4, 9), Offset(7, 9), Offset(7, 10), Offset(9, 10)], ArrowDir.right),
+      _a([Offset(7, 2), Offset(9, 2), Offset(9, 4), Offset(8, 4)], ArrowDir.left),
+      _s(2, 9, ArrowDir.left),
+      _s(4, 10, ArrowDir.down),
+      _s(9, 8, ArrowDir.right),
+    ],
+  );
+
+  return [l6, l2, l3, l4, l5, l6, l7, l8, l9, l10];
 }
 
 // ═══════════════════════════════════════════════════════════
-// BLOC EVENTS
+// BLOC STATE & EVENTS
 // ═══════════════════════════════════════════════════════════
 
-abstract class PuzzleEvent  {
+abstract class PuzzleEvent {
   const PuzzleEvent();
-  List<Object?> get props => [];
 }
-class LoadLevel    extends PuzzleEvent { final int idx; const LoadLevel(this.idx); @override List<Object?> get props => [idx]; }
-class TapArrow     extends PuzzleEvent { final int id;  const TapArrow(this.id);  @override List<Object?> get props => [id];  }
-class UseHint      extends PuzzleEvent { const UseHint(); }
+class LoadLevel extends PuzzleEvent { final int idx; const LoadLevel(this.idx); }
+class TapArrow extends PuzzleEvent { final int id; const TapArrow(this.id); }
+class UseHint extends PuzzleEvent { const UseHint(); }
 class RestartLevel extends PuzzleEvent { const RestartLevel(); }
-class NextLevel    extends PuzzleEvent { const NextLevel(); }
-class ClearWrong   extends PuzzleEvent { const ClearWrong(); }
-
-// ═══════════════════════════════════════════════════════════
-// BLOC STATE
-// ═══════════════════════════════════════════════════════════
+class NextLevel extends PuzzleEvent { const NextLevel(); }
+class ClearWrong extends PuzzleEvent { const ClearWrong(); }
 
 enum PuzzleStatus { playing, levelComplete, gameOver, allDone }
 
-class PuzzleState   {
+class PuzzleState {
   final Level level;
   final List<ArrowCell> arrows;
   final int lives;
   final int maxLives;
-  final int hintId;   // -1 = none
-  final int wrongId;  // -1 = none
+  final int hintId;
+  final int wrongId;
   final PuzzleStatus status;
   final int levelIndex;
   final int totalLevels;
@@ -237,7 +325,7 @@ class PuzzleState   {
   });
 
   int get removedCount => arrows.where((a) => a.removed).length;
-  int get totalCount   => arrows.length;
+  int get totalCount => arrows.length;
 
   PuzzleState copyWith({
     List<ArrowCell>? arrows,
@@ -247,37 +335,30 @@ class PuzzleState   {
     PuzzleStatus? status,
   }) => PuzzleState(
     level: level,
-    arrows: arrows  ?? this.arrows,
-    lives:  lives   ?? this.lives,
+    arrows: arrows ?? this.arrows,
+    lives: lives ?? this.lives,
     maxLives: maxLives,
-    hintId:  hintId  ?? this.hintId,
+    hintId: hintId ?? this.hintId,
     wrongId: wrongId ?? this.wrongId,
-    status:  status  ?? this.status,
+    status: status ?? this.status,
     levelIndex: levelIndex,
     totalLevels: totalLevels,
   );
-
-  List<Object?> get props =>
-      [level, arrows, lives, hintId, wrongId, status, levelIndex];
 }
-
-// ═══════════════════════════════════════════════════════════
-// BLOC
-// ═══════════════════════════════════════════════════════════
 
 class PuzzleBloc extends Bloc<PuzzleEvent, PuzzleState> {
   final List<Level> levels;
 
   PuzzleBloc({required this.levels}) : super(_makeState(levels, 0)) {
-    on<LoadLevel>    ((e, emit) => emit(_makeState(levels, e.idx)));
-    on<RestartLevel> ((e, emit) => emit(_makeState(levels, state.levelIndex)));
-    on<NextLevel>    ((e, emit) {
+    on<LoadLevel>((e, emit) => emit(_makeState(levels, e.idx)));
+    on<RestartLevel>((e, emit) => emit(_makeState(levels, state.levelIndex)));
+    on<NextLevel>((e, emit) {
       final n = state.levelIndex + 1;
       if (n < levels.length) emit(_makeState(levels, n));
     });
-    on<ClearWrong>   ((e, emit) => emit(state.copyWith(wrongId: -1)));
-    on<TapArrow>     (_onTap);
-    on<UseHint>      (_onHint);
+    on<ClearWrong>((e, emit) => emit(state.copyWith(wrongId: -1)));
+    on<TapArrow>(_onTap);
+    on<UseHint>(_onHint);
   }
 
   static PuzzleState _makeState(List<Level> lvls, int idx) => PuzzleState(
@@ -289,72 +370,79 @@ class PuzzleBloc extends Bloc<PuzzleEvent, PuzzleState> {
     levelIndex: idx,
     totalLevels: lvls.length,
   );
+
+  List<(int, int)> getOccupiedCells(List<Offset> path) {
+    final cells = <(int, int)>{};
+    if (path.isEmpty) return [];
+
+    for (int i = 0; i < path.length - 1; i++) {
+      final p1 = path[i];
+      final p2 = path[i + 1];
+
+      final minR = math.min(p1.dy.round(), p2.dy.round());
+      final maxR = math.max(p1.dy.round(), p2.dy.round());
+      final minC = math.min(p1.dx.round(), p2.dx.round());
+      final maxC = math.max(p1.dx.round(), p2.dx.round());
+
+      for (int r = minR; r <= maxR; r++) {
+        for (int c = minC; c <= maxC; c++) {
+          cells.add((r, c));
+        }
+      }
+    }
+    return cells.toList();
+  }
+
   bool _canRemove(ArrowCell arrow, List<ArrowCell> arrows) {
-    final visited = <String>{};
-
-    int r = arrow.row;
-    int c = arrow.col;
-
+    if (arrow.path.isEmpty) return true;
+    final head = arrow.path.last;
     final (dr, dc) = arrow.dir.exitDelta();
+
+    int r = head.dy.round();
+    int c = head.dx.round();
+    final visited = <String>{};
 
     while (true) {
       r += dr;
       c += dc;
 
+      if (r < 0 || r >= state.level.rows || c < 0 || c >= state.level.cols) {
+        return true;
+      }
+
       final key = '$r,$c';
       if (visited.contains(key)) return false;
       visited.add(key);
 
-      // out of bounds → safe
-      if (r < 0 || r >= state.level.rows ||
-          c < 0 || c >= state.level.cols) {
-        return true;
-      }
-
-      // if another arrow exists → BLOCK
-      final blocker = arrows.any(
-            (a) => !a.removed && a.row == r && a.col == c,
-      );
+      final blocker = arrows.any((a) {
+        if (a.id == arrow.id || a.removed) return false;
+        return getOccupiedCells(a.path).any((cell) => cell.$1 == r && cell.$2 == c);
+      });
 
       if (blocker) return false;
     }
   }
-  bool _canRemoves(ArrowCell arrow, List<ArrowCell> arrows) {
-    final (dr, dc) = arrow.dir.exitDelta();
-    final er = arrow.row + dr;
-    final ec = arrow.col + dc;
-    if (er < 0 || er >= state.level.rows || ec < 0 || ec >= state.level.cols) return true;
-    return !arrows.any((a) => !a.removed && a.row == er && a.col == ec);
-  }
-  bool canRemoveArrow(ArrowCell arrow) {
-    return _canRemove(arrow, state.arrows);
-  }
-  ArrowCell? _firstRemovable(List<ArrowCell> arrows) {
-    for (final a in arrows.where((x) => !x.removed)) {
-      if (_canRemove(a, arrows)) return a;
-    }
-    return null;
-  }
+
+  bool canRemoveArrow(ArrowCell arrow) => _canRemove(arrow, state.arrows);
 
   void _onTap(TapArrow event, Emitter<PuzzleState> emit) async {
     if (state.status != PuzzleStatus.playing) return;
     final arrows = List<ArrowCell>.from(state.arrows);
     final idx = arrows.indexWhere((a) => a.id == event.id);
-    if (idx == -1 || arrows[idx].removed) return;
+    if (idx == -1 || arrows[idx].removed || arrows[idx].removing) return;
 
     if (_canRemove(arrows[idx], arrows)) {
-      // arrows[idx] = arrows[idx].copyWith(removed: true);
       arrows[idx] = arrows[idx].copyWith(removing: true);
-      emit(state.copyWith(arrows: arrows));
-      await Future.delayed(const Duration(milliseconds: 600));
-      arrows[idx] = arrows[idx].copyWith(removed: true);
+      emit(state.copyWith(arrows: arrows, hintId: -1, wrongId: -1));
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      arrows[idx] = arrows[idx].copyWith(removed: true, removing: false);
       final allGone = arrows.every((a) => a.removed);
       final newStatus = allGone
-          ? (state.levelIndex + 1 >= levels.length
-          ? PuzzleStatus.allDone
-          : PuzzleStatus.levelComplete)
+          ? (state.levelIndex + 1 >= levels.length ? PuzzleStatus.allDone : PuzzleStatus.levelComplete)
           : PuzzleStatus.playing;
-      emit(state.copyWith(arrows: arrows, hintId: -1, wrongId: -1, status: newStatus));
+      emit(state.copyWith(arrows: arrows, status: newStatus));
     } else {
       final newLives = state.lives - 1;
       emit(state.copyWith(
@@ -363,21 +451,24 @@ class PuzzleBloc extends Bloc<PuzzleEvent, PuzzleState> {
         hintId: -1,
         status: newLives <= 0 ? PuzzleStatus.gameOver : PuzzleStatus.playing,
       ));
-      // Auto-clear wrong highlight after 600ms
-      await Future.delayed(const Duration(milliseconds: 600));
+      await Future.delayed(const Duration(milliseconds: 500));
       if (!emit.isDone) emit(state.copyWith(wrongId: -1));
     }
   }
 
   void _onHint(UseHint event, Emitter<PuzzleState> emit) {
     if (state.status != PuzzleStatus.playing) return;
-    final hint = _firstRemovable(state.arrows);
-    if (hint != null) emit(state.copyWith(hintId: hint.id, wrongId: -1));
+    for (final a in state.arrows.where((x) => !x.removed && !x.removing)) {
+      if (_canRemove(a, state.arrows)) {
+        emit(state.copyWith(hintId: a.id, wrongId: -1));
+        return;
+      }
+    }
   }
 }
 
 // ═══════════════════════════════════════════════════════════
-// APP ROOT
+// UI COMPONENTS
 // ═══════════════════════════════════════════════════════════
 
 class ArrowPuzzleApp extends StatelessWidget {
@@ -388,11 +479,11 @@ class ArrowPuzzleApp extends StatelessWidget {
     return BlocProvider(
       create: (_) => PuzzleBloc(levels: buildLevels()),
       child: MaterialApp(
-        title: 'Arrows – Puzzle Escape',
+        title: 'Arrows Escape',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           brightness: Brightness.light,
-          scaffoldBackgroundColor: const Color(0xFFF2EFE9),
+          scaffoldBackgroundColor: const Color(0xFFF8F9FA),
           useMaterial3: true,
         ),
         home: const PuzzleScreen(),
@@ -401,17 +492,12 @@ class ArrowPuzzleApp extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// PUZZLE SCREEN
-// ═══════════════════════════════════════════════════════════
-
 class PuzzleScreen extends StatelessWidget {
   const PuzzleScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2EFE9),
       body: SafeArea(
         child: BlocBuilder<PuzzleBloc, PuzzleState>(
           builder: (ctx, state) => Column(
@@ -427,10 +513,6 @@ class PuzzleScreen extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// HEADER
-// ═══════════════════════════════════════════════════════════
-
 class _Header extends StatelessWidget {
   final PuzzleState state;
   const _Header({required this.state});
@@ -438,72 +520,29 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Back icon
-          GestureDetector(
-            onTap: () {
-              Navigator.pop(context);
-            },
-            child: Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.7),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  size: 16, color: Color(0xFF444444)),
-            ),
-          ),
-          // Title
+          const SizedBox(width: 40),
           Column(
             children: [
-              Text(
-                'Level ${state.level.number}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A1A1A),
-                  letterSpacing: 0.3,
-                ),
-              ),
-              Text(
-                state.level.title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF999999),
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
+              Text('Level ${state.level.number}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2D3748))),
+              Text(state.level.title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
             ],
           ),
-          // Hearts
           Row(
-            children: List.generate(
-              state.maxLives,
-                  (i) => Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: Icon(
-                  i < state.lives ? Icons.favorite : Icons.favorite_border,
-                  color: i < state.lives
-                      ? const Color(0xFFE53935)
-                      : const Color(0xFFDDDDDD),
-                  size: 18,
-                ),
-              ),
-            ),
-          ),
+            children: List.generate(state.maxLives, (i) => Icon(
+              i < state.lives ? Icons.favorite : Icons.favorite_border,
+              color: i < state.lives ? const Color(0xFFE53E3E) : const Color(0xFFE2E8F0),
+              size: 20,
+            )),
+          )
         ],
       ),
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════
-// BODY
-// ═══════════════════════════════════════════════════════════
 
 class _Body extends StatelessWidget {
   final PuzzleState state;
@@ -511,22 +550,81 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state.status == PuzzleStatus.levelComplete ||
-        state.status == PuzzleStatus.allDone) {
+    if (state.status == PuzzleStatus.levelComplete || state.status == PuzzleStatus.allDone) {
       return _LevelCompleteView(state: state);
     }
     if (state.status == PuzzleStatus.gameOver) {
       return _GameOverView(state: state);
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420, maxHeight: 560),
-          child: AspectRatio(
-            aspectRatio: state.level.cols / state.level.rows,
-            child: _MazeWidget(state: state),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: AspectRatio(
+          aspectRatio: state.level.cols / state.level.rows,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8))],
+            ),
+            child: LayoutBuilder(
+              builder: (ctx, constraints) {
+                final cellW = constraints.maxWidth / state.level.cols;
+                final cellH = constraints.maxHeight / state.level.rows;
+                final bloc = context.read<PuzzleBloc>();
+
+                final activeOccupied = state.arrows
+                    .where((a) => !a.removed)
+                    .expand((a) => bloc.getOccupiedCells(a.path))
+                    .toSet();
+
+                return Stack(
+                  children: [
+                    Positioned.fill(child: CustomPaint(painter: _GridPainter(rows: state.level.rows, cols: state.level.cols, activeOccupied: activeOccupied))),
+                    // 2. 🧪 TESTING LAYER: Draws Whiteboard Grid Coordinates everywhere
+                    Positioned.fill(
+                      child: IgnorePointer( // IgnorePointer ensures this overlay doesn't block tap gestures
+                        child: CustomPaint(
+                          painter: _DebugMatrixPainter(
+                            rows: state.level.rows,
+                            cols: state.level.cols,
+                            cellW: cellW,
+                            cellH: cellH,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // 3. Arrow graphics tiles with dynamic Testing Colors 🧪
+                    ...state.arrows.where((a) => !a.removed).map((arrow) {
+                      // Look up if this arrow is currently allowed to escape
+                      final bool isNextMove = context.read<PuzzleBloc>().canRemoveArrow(arrow);
+
+                      // Determine testing colors
+                      Color testingColor = const Color(0xFF1E293B); // Default: Slate/Black
+
+                      if (arrow.removing) {
+                        testingColor = Colors.blue; // 🔵 Currently moving
+                      } else if (isNextMove) {
+                        testingColor = Colors.green; // 🟢 TESTING: Ready to move next!
+                      }
+
+                      return _ArrowTile(
+                        key: ValueKey(arrow.id),
+                        arrow: arrow,
+                        cellW: cellW,
+                        cellH: cellH,
+                        isHint: arrow.id == state.hintId,
+                        isWrong: arrow.id == state.wrongId,
+                        // Pass the calculated testing color into your arrow tile setup
+                        colorOverride: testingColor,
+                      );
+                    }),
+                    Positioned.fill(child: _GridButtonLayer(state: state, cellW: cellW, cellH: cellH)),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -534,395 +632,318 @@ class _Body extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// MAZE WIDGET  — white card with grid + arrows
-// ═══════════════════════════════════════════════════════════
-
-class _MazeWidget extends StatelessWidget {
+class _GridButtonLayer extends StatelessWidget {
   final PuzzleState state;
-  const _MazeWidget({required this.state});
+  final double cellW, cellH;
+  const _GridButtonLayer({required this.state, required this.cellW, required this.cellH});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,           // ← explicit white background
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.13),
-            blurRadius: 28,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: LayoutBuilder(
-          builder: (ctx, constraints) {
-            final W = constraints.maxWidth;
-            final H = constraints.maxHeight;
-            final cellW = W / state.level.cols;
-            final cellH = H / state.level.rows;
+    final bloc = context.read<PuzzleBloc>();
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (details) {
+        final col = (details.localPosition.dx / cellW).floor();
+        final row = (details.localPosition.dy / cellH).floor();
 
-            return SizedBox(
-              width: W,
-              height: H,
-              child: Stack(
-                children: [
-
-                  // ── White fill (safety net) ──────────────
-                  Positioned.fill(
-                    child: ColoredBox(color: Colors.white),
-                  ),
-                  // ── GRID CELLS (ADD THIS) ──
-                  Positioned.fill(
-                    child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: state.level.cols,
-                      ),
-                      itemCount: state.level.rows * state.level.cols,
-                      itemBuilder: (context, index) {
-                        final row = index ~/ state.level.cols;
-                        final col = index % state.level.cols;
-                        return Text('R-$row,C-$col',textAlign: TextAlign.center,);
-                      },
-                    ),
-                  ),
-                  // ── Grid painter ──────────────────────────
-                  /*Positioned.fill(
-                    child: CustomPaint(
-                      painter: _GridPainter(
-                        rows: state.level.rows,
-                        cols: state.level.cols,
-                      ),
-                    ),
-                  ),*/
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: MazePathPainter(
-                        state.level.paths ?? [],
-                      ),
-                    ),
-                  ),
-                  // ── Arrow widgets ─────────────────────────
-                  ...state.arrows
-                      .where((a) => !a.removed)
-                      .map((arrow) => _ArrowTile(
-                    key: ValueKey(arrow.id),
-                    arrow: arrow,
-                    cellW: cellW,
-                    cellH: cellH,
-                    rows: state.level.rows,
-                    cols: state.level.cols,
-                    isHint:  arrow.id == state.hintId,
-                    isWrong: arrow.id == state.wrongId,
-                    isBlocked: !context.read<PuzzleBloc>()
-                        .canRemoveArrow(arrow),
-                  )),
-
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+        final tapped = bloc.state.arrows.firstWhere(
+              (a) => !a.removed && bloc.getOccupiedCells(a.path).contains((row, col)),
+          orElse: () => ArrowCell(id: -1, path: [], dir: ArrowDir.up),
+        );
+        if (tapped.id != -1) {
+          bloc.add(TapArrow(tapped.id));
+        }
+      },
+      child: const SizedBox.expand(),
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════════
-// GRID PAINTER — draws faint grid lines + thick border
+// PAINTERS (GRID & ARROW)
 // ═══════════════════════════════════════════════════════════
 
 class _GridPainter extends CustomPainter {
   final int rows, cols;
-  const _GridPainter({required this.rows, required this.cols});
+  final Set<(int, int)> activeOccupied;
+  const _GridPainter({required this.rows, required this.cols, required this.activeOccupied});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Fill white (belt-and-suspenders)
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..color = Colors.white,
-    );
-
-    final cw = size.width  / cols;
+    final cw = size.width / cols;
     final ch = size.height / rows;
+    final dotPaint = Paint()..color = const Color(0xFFCBD5E0)..style = PaintingStyle.fill;
 
-    // Faint grid lines
-    final gridPaint = Paint()
-      ..color = const Color(0xFFE8E3D8)
-      ..strokeWidth = 0.8;
-
-    for (int r = 1; r < rows; r++) {
-      canvas.drawLine(Offset(0, r * ch), Offset(size.width, r * ch), gridPaint);
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        if (!activeOccupied.contains((r, c))) {
+          canvas.drawCircle(Offset(c * cw + cw / 2, r * ch + ch / 2), 3.0, dotPaint);
+        }
+      }
     }
-    for (int c = 1; c < cols; c++) {
-      canvas.drawLine(Offset(c * cw, 0), Offset(c * cw, size.height), gridPaint);
-    }
-
-    // Outer border
-    final borderPaint = Paint()
-      ..color = const Color(0xFF1A1A1A)
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke;
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(1, 1, size.width - 2, size.height - 2),
-        const Radius.circular(16),
-      ),
-      borderPaint,
-    );
   }
 
   @override
-  bool shouldRepaint(_GridPainter old) => old.rows != rows || old.cols != cols;
+  bool shouldRepaint(_GridPainter old) => old.activeOccupied != activeOccupied;
 }
-
-// ═══════════════════════════════════════════════════════════
-// ARROW TILE
-// ═══════════════════════════════════════════════════════════
 
 class _ArrowTile extends StatefulWidget {
   final ArrowCell arrow;
   final double cellW, cellH;
-  final bool isHint, isWrong,isBlocked;
-  final int rows;
-  final int cols;
-  const _ArrowTile({
-    super.key,
-    required this.arrow,
-    required this.cellW,
-    required this.cellH,
-    required this.isHint,
-    required this.isWrong,
-    required this.isBlocked,
-    required this.rows,
-    required this.cols,
-  });
+  final bool isHint, isWrong;
+  final Color colorOverride;
+  const _ArrowTile({super.key, required this.arrow, required this.cellW, required this.cellH, required this.isHint, required this.isWrong, required this.colorOverride});
 
   @override
   State<_ArrowTile> createState() => _ArrowTileState();
 }
 
-class _ArrowTileState extends State<_ArrowTile>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _blink;
+class _ArrowTileState extends State<_ArrowTile> with TickerProviderStateMixin {
+  late AnimationController _animCtrl;
+  late Animation<double> _progress;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
+    _animCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 550),
-    )..repeat(reverse: true);
-    _blink = Tween(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+      duration: Duration(milliseconds: widget.arrow.removing ? 450 : 800),
+    );
+    _progress = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOutCubic));
+
+    if (widget.isHint || widget.isWrong) {
+      _animCtrl.repeat(reverse: true);
+    } else if (widget.arrow.removing) {
+      _animCtrl.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _ArrowTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.arrow.removing && !oldWidget.arrow.removing) {
+      _animCtrl.duration = const Duration(milliseconds: 450);
+      _animCtrl.forward(from: 0.0);
+    } else if ((widget.isHint && !oldWidget.isHint) || (widget.isWrong && !oldWidget.isWrong)) {
+      _animCtrl.duration = const Duration(milliseconds: 400);
+      _animCtrl.repeat(reverse: true);
+    } else if (!widget.isHint && !widget.isWrong && !widget.arrow.removing && (oldWidget.isHint || oldWidget.isWrong)) {
+      _animCtrl.stop();
+      _animCtrl.reset();
+    }
   }
 
   @override
   void dispose() {
-    _ctrl.dispose();
+    _animCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left:   widget.arrow.col * widget.cellW,
-      top:    widget.arrow.row * widget.cellH,
-      width:  widget.cellW,
-      height: widget.cellH,
-      child: InkWell(
-        onTap: () =>
-            context.read<PuzzleBloc>().add(TapArrow(widget.arrow.id)),
-        child: AnimatedBuilder(
-          animation: _blink,
-          builder: (_, __) {
-            final Color arrowColor;
-            if (widget.isWrong) {
-              arrowColor = Color.lerp(
-                const Color(0xFF1A1A1A),
-                const Color(0xFFE53935),
-                _blink.value,
-              )!;
-            }
-            // hide it if not need block arrow
-            else if (widget.isBlocked) {
-              arrowColor = Colors.red.shade300;
-            }
-            else if (widget.isHint) {
-              arrowColor = Color.lerp(
-                const Color(0xFF1A1A1A),
-                const Color(0xFFF5A623),
-                _blink.value,
-              )!;
-            } else {
-              arrowColor = const Color(0xFF1A1A1A);
-            }
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _progress,
+        builder: (context, child) {
+          Color color = widget.colorOverride; // Premium slim dark charcoal standard lines
+          if (widget.arrow.removing) {
+            color = const Color(0xFF3182CE); // Highlighting sleek active sliding blue
+          } else if (widget.isWrong) {
+            color = Color.lerp(const Color(0xFF1A202C), const Color(0xFFE53E3E), _progress.value)!;
+          } else if (widget.isHint) {
+            color = Color.lerp(const Color(0xFF1A202C), const Color(0xFFDD6B20), _progress.value)!;
+          }
 
-            return AnimatedSlide(
-              duration: const Duration(milliseconds: 600),
-              offset: widget.arrow.removing
-                  ? getRemoveOffset()
-                  : Offset.zero,
-              child: CustomPaint(
-                painter: _ArrowPainter(
-                  dir:   widget.arrow.dir,
-                  color: arrowColor,
-                  cellW: widget.cellW,
-                  cellH: widget.cellH,
-                ),
+          double tx = 0, ty = 0;
+          if (widget.isWrong) {
+            final shake = math.sin(_progress.value * math.pi * 4) * 4.0;
+            if (widget.arrow.dir == ArrowDir.up || widget.arrow.dir == ArrowDir.down) tx = shake; else ty = shake;
+          }
+
+          return Transform.translate(
+            offset: Offset(tx, ty),
+            child: CustomPaint(
+              painter: _ArrowPainter(
+                path: widget.arrow.path,
+                dir: widget.arrow.dir,
+                color: color,
+                cellW: widget.cellW,
+                cellH: widget.cellH,
+                progress: widget.arrow.removing ? _progress.value : 0.0,
               ),
-
-
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
-  Offset getRemoveOffset() {
-    switch (widget.arrow.dir) {
-      case ArrowDir.right:
-        return Offset(
-          (widget.cols - widget.arrow.col).toDouble(),
-          0,
-        );
-
-      case ArrowDir.left:
-        return Offset(
-          -(widget.arrow.col + 1).toDouble(),
-          0,
-        );
-
-      case ArrowDir.down:
-        return Offset(
-          0,
-          (widget.rows - widget.arrow.row).toDouble(),
-        );
-
-      case ArrowDir.up:
-        return Offset(
-          0,
-          -(widget.arrow.row + 1).toDouble(),
-        );
-    }
-  }
-  Offset getRemoveOffsets(ArrowDir dir) {
-    switch (dir) {
-      case ArrowDir.right:
-        return const Offset(1.0, 0.0);   // move right
-      case ArrowDir.left:
-        return const Offset(-1.0, 0.0);  // move left
-      case ArrowDir.up:
-        return const Offset(0.0, -1.0);  // move up
-      case ArrowDir.down:
-        return const Offset(0.0, 1.0);   // move down
-    }
-  }
-  double getTargetLeft() {
-    switch (widget.arrow.dir) {
-      case ArrowDir.right:
-        return widget.arrow.col * widget.cellW + (widget.cellW * 5);
-      case ArrowDir.left:
-        return widget.arrow.col * widget.cellW - (widget.cellW * 5);
-      default:
-        return widget.arrow.col * widget.cellW;
-    }
-  }
-
-  double getTargetTop() {
-    switch (widget.arrow.dir) {
-      case ArrowDir.down:
-        return widget.arrow.row * widget.cellH + (widget.cellH * 5);
-      case ArrowDir.up:
-        return widget.arrow.row * widget.cellH - (widget.cellH * 5);
-      default:
-        return widget.arrow.row * widget.cellH;
-    }
-  }
 }
+class _DebugMatrixPainter extends CustomPainter {
+  final int rows;
+  final int cols;
+  final double cellW;
+  final double cellH;
 
-// ═══════════════════════════════════════════════════════════
-// ARROW PAINTER
-// Thin-line arrow matching the game screenshots:
-//   ──────>   (shaft + two-line arrowhead)
-// ═══════════════════════════════════════════════════════════
-
-class _ArrowPainter extends CustomPainter {
-  final ArrowDir dir;
-  final Color color;
-  final double cellW, cellH;
-
-  const _ArrowPainter({
-    required this.dir,
-    required this.color,
+  _DebugMatrixPainter({
+    required this.rows,
+    required this.cols,
     required this.cellW,
     required this.cellH,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.5
-      ..strokeCap  = StrokeCap.round
-      ..style = PaintingStyle.stroke;
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < cols; c++) {
+        final double textX = c * cellW + cellW / 2;
+        final double textY = r * cellH + cellH / 2;
 
-    final cx = size.width  / 2;
-    final cy = size.height / 2;
+        final matrixTextPainter = TextPainter(
+          text: TextSpan(
+            text: '$c,$r',
+            style: TextStyle(
+              color: Colors.blueGrey.withOpacity(0.4), // Faint blueprint look
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              backgroundColor: Colors.white.withOpacity(0.7), // Readable background badge
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
 
-    // Dimensions relative to the smaller cell dimension
-    final minDim   = math.min(size.width, size.height);
-    final shaftLen = minDim * .45;   // half-shaft length each side
-    final headLen  = minDim * .1;   // arrowhead arm length
-    const headAngle = 0.45;           // radians ≈ 26°
-
-    canvas.save();
-    canvas.translate(cx, cy);
-    canvas.rotate(dir.angle); // right=0, down=π/2, left=π, up=-π/2
-
-    // Shaft: from left to just before tip
-    canvas.drawLine(
-      Offset(-shaftLen, 0),
-      Offset(shaftLen, 0),
-      paint,
-    );
-
-    // Arrowhead tip position
-    final tipX = shaftLen;
-
-    // Two arrowhead arms
-    canvas.drawLine(
-      Offset(tipX, 0),
-      Offset(tipX - headLen * math.cos(headAngle),
-          headLen * math.sin(headAngle)),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(tipX, 0),
-      Offset(tipX - headLen * math.cos(headAngle),
-          -headLen * math.sin(headAngle)),
-      paint,
-    );
-
-    canvas.restore();
+        matrixTextPainter.paint(
+          canvas,
+          Offset(textX - matrixTextPainter.width / 2, textY - matrixTextPainter.height / 2),
+        );
+      }
+    }
   }
 
+  @override
+  bool shouldRepaint(covariant _DebugMatrixPainter oldDelegate) =>
+      oldDelegate.rows != rows || oldDelegate.cols != cols;
+}
+class _ArrowPainter extends CustomPainter {
+  final List<Offset> path;
+  final ArrowDir dir;
+  final Color color;
+  final double cellW, cellH;
+  final double progress;
 
+  const _ArrowPainter({
+    required this.path,
+    required this.dir,
+    required this.color,
+    required this.cellW,
+    required this.cellH,
+    required this.progress,
+  });
 
   @override
-  bool shouldRepaint(_ArrowPainter o) =>
-      o.dir != dir || o.color != color;
-}
+  void paint(Canvas canvas, Size size) {
+    if (path.isEmpty) return;
 
+    // Use your preferred thin stroke width
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    // 1. Build base path from grid coords
+    final extendedPath = Path();
+    final first = path.first;
+    extendedPath.moveTo(first.dx * cellW + cellW / 2, first.dy * cellH + cellH / 2);
+
+    for (int i = 1; i < path.length; i++) {
+      final pt = path[i];
+      extendedPath.lineTo(pt.dx * cellW + cellW / 2, pt.dy * cellH + cellH / 2);
+    }
+
+    // Measure base path length (before exit extension)
+    double baseLength = 0.0;
+    final baseMetrics = extendedPath.computeMetrics().toList();
+    if (baseMetrics.isNotEmpty) {
+      baseLength = baseMetrics.first.length;
+    }
+
+    // 2. Extend path continuously from the end cell
+    final last = path.last;
+    final lastX = last.dx * cellW + cellW / 2;
+    final lastY = last.dy * cellH + cellH / 2;
+    final (dr, dc) = dir.exitDelta();
+
+    final exitDistance = math.max(size.width, size.height) * 2.0;
+    final extendX = lastX + dc * exitDistance;
+    final extendY = lastY + dr * exitDistance;
+    extendedPath.lineTo(extendX, extendY);
+
+    double extendedLength = 0.0;
+    final extendedMetrics = extendedPath.computeMetrics().toList();
+    if (extendedMetrics.isNotEmpty) {
+      extendedLength = extendedMetrics.first.length;
+    }
+
+    // 3. Keep your exact original slithering movement calculation
+    final double startDist = progress * extendedLength;
+    final double endDist = baseLength + progress * (extendedLength - baseLength);
+
+    Path drawnPath = Path();
+    Offset? headPos;
+    double headAngle = dir.angle;
+
+    if (extendedMetrics.isNotEmpty) {
+      final metric = extendedMetrics.first;
+      if (endDist > startDist) {
+        drawnPath = metric.extractPath(startDist, endDist);
+      }
+      final tangent = metric.getTangentForOffset(endDist);
+      if (tangent != null) {
+        headPos = tangent.position;
+        headAngle = math.atan2(tangent.vector.dy, tangent.vector.dx);
+      }
+    } else {
+      drawnPath.moveTo(first.dx * cellW + cellW / 2, first.dy * cellH + cellH / 2);
+      for (int i = 1; i < path.length; i++) {
+        final pt = path[i];
+        drawnPath.lineTo(pt.dx * cellW + cellW / 2, pt.dy * cellH + cellH / 2);
+      }
+      headPos = Offset(lastX, lastY);
+    }
+
+    // Draw the winding line shaft
+    canvas.drawPath(drawnPath, paint);
+
+    // 4. Draw matching stroke wings seamlessly fused at the absolute tip
+    if (headPos != null) {
+      canvas.save();
+      canvas.translate(headPos.dx, headPos.dy);
+      canvas.rotate(headAngle);
+
+      final headPath = Path();
+      const double hWidth = 6.5;
+      const double hLength = 10.0;
+
+      // Pointing exactly outwards from (0,0) so the line ends right at the point
+      headPath.moveTo(-hLength, -hWidth);
+      headPath.lineTo(0, 0);
+      headPath.lineTo(-hLength, hWidth);
+
+      canvas.drawPath(headPath, paint);
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ArrowPainter old) =>
+      old.path != path ||
+          old.dir != dir ||
+          old.color != color ||
+          old.progress != progress;
+}
 // ═══════════════════════════════════════════════════════════
-// FOOTER
+// REFRESHED FOOTER CONTROL PANELS
 // ═══════════════════════════════════════════════════════════
 
 class _Footer extends StatelessWidget {
@@ -933,134 +954,74 @@ class _Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     final bloc = context.read<PuzzleBloc>();
     return Container(
-      padding: const EdgeInsets.fromLTRB(32, 16, 32, 24),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 32),
       decoration: const BoxDecoration(
-        color: Color(0xFFF2EFE9),
-        border: Border(top: BorderSide(color: Color(0xFFDDD8CC), width: 1)),
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFEDF2F7))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _FooterBtn(
-            icon: Icons.refresh_rounded,
-            label: 'Restart',
-            onTap: () => bloc.add(const RestartLevel()),
-          ),
-          _ProgressWidget(
-            removed: state.removedCount,
-            total:   state.totalCount,
-          ),
-          _FooterBtn(
-            icon: Icons.lightbulb_outline_rounded,
-            label: 'Hint',
-            iconColor: const Color(0xFFF5A623),
-            labelColor: const Color(0xFFF5A623),
-            bgColor: const Color(0xFFFFF3DC),
-            onTap: () => bloc.add(const UseHint()),
-          ),
+          _Btn(icon: Icons.refresh, label: 'Restart', onTap: () => bloc.add(const RestartLevel())),
+          _ProgressCircle(removed: state.removedCount, total: state.totalCount),
+          _Btn(icon: Icons.lightbulb_outline, label: 'Hint', activeColor: const Color(0xFFDD6B20), onTap: () => bloc.add(const UseHint())),
         ],
       ),
     );
   }
 }
 
-class _FooterBtn extends StatelessWidget {
+class _Btn extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final Color? iconColor;
-  final Color? labelColor;
-  final Color? bgColor;
+  final Color? activeColor;
 
-  const _FooterBtn({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.iconColor,
-    this.labelColor,
-    this.bgColor,
-  });
+  const _Btn({required this.icon, required this.label, required this.onTap, this.activeColor});
 
   @override
   Widget build(BuildContext context) {
-    final ic = iconColor  ?? const Color(0xFF555555);
-    final lc = labelColor ?? const Color(0xFF555555);
-    final bg = bgColor    ?? const Color(0xFFECE8E0);
-
-    return GestureDetector(
+    final col = activeColor ?? const Color(0xFF4A5568);
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 52, height: 52,
-            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-            child: Icon(icon, color: ic, size: 24),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: lc,
-            ),
-          ),
+          Container(width: 50, height: 50, decoration: BoxDecoration(color: col.withOpacity(0.06), shape: BoxShape.circle), child: Icon(icon, color: col)),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: col)),
         ],
       ),
     );
   }
 }
 
-class _ProgressWidget extends StatelessWidget {
+class _ProgressCircle extends StatelessWidget {
   final int removed, total;
-  const _ProgressWidget({required this.removed, required this.total});
+  const _ProgressCircle({required this.removed, required this.total});
 
   @override
   Widget build(BuildContext context) {
-    final pct = total == 0 ? 0.0 : removed / total;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 52, height: 52,
+          width: 50, height: 50,
           child: Stack(
             alignment: Alignment.center,
             children: [
-              CircularProgressIndicator(
-                value: pct,
-                strokeWidth: 4,
-                backgroundColor: const Color(0xFFDDD8CC),
-                valueColor: const AlwaysStoppedAnimation(Color(0xFF4CAF50)),
-              ),
-              Text(
-                '$removed/$total',
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF333333),
-                ),
-              ),
+              CircularProgressIndicator(value: total == 0 ? 0 : removed / total, strokeWidth: 3.5, backgroundColor: const Color(0xFFE2E8F0), valueColor: const AlwaysStoppedAnimation(Color(0xFF38A169))),
+              Text('$removed/$total', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
-        const SizedBox(height: 6),
-        const Text(
-          'Progress',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF555555),
-          ),
-        ),
+        const SizedBox(height: 4),
+        const Text('Progress', style: TextStyle(fontSize: 12, color: Color(0xFF718096))),
       ],
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════
-// OVERLAYS
-// ═══════════════════════════════════════════════════════════
 
 class _LevelCompleteView extends StatelessWidget {
   final PuzzleState state;
@@ -1068,71 +1029,25 @@ class _LevelCompleteView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<PuzzleBloc>();
     final isLast = state.status == PuzzleStatus.allDone;
-
     return Center(
-      child: Padding(
+      child: Container(
+        margin: const EdgeInsets.all(32),
         padding: const EdgeInsets.all(32),
-        child: Container(
-          padding: const EdgeInsets.all(36),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.12),
-                blurRadius: 32,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('🎉', style: TextStyle(fontSize: 64)),
-              const SizedBox(height: 16),
-              Text(
-                isLast ? 'You Win!' : 'Level Complete!',
-                style: const TextStyle(
-                    fontSize: 24, fontWeight: FontWeight.w800,
-                    color: Color(0xFF1A1A1A)),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                isLast
-                    ? 'Amazing! All 5 levels cleared!'
-                    : 'Great solve! Ready for more?',
-                style: const TextStyle(fontSize: 14, color: Color(0xFF888888)),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              if (!isLast)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => bloc.add(const NextLevel()),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A1A1A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Next Level →',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => bloc.add(const RestartLevel()),
-                child: const Text('Play Again',
-                    style: TextStyle(
-                        fontSize: 14, color: Color(0xFF999999))),
-              ),
-            ],
-          ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(isLast ? '🏆' : '🎉', style: const TextStyle(fontSize: 50)),
+            const SizedBox(height: 16),
+            Text(isLast ? 'Master Escape!' : 'Level Cleared!', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            if (!isLast) ElevatedButton(
+              onPressed: () => context.read<PuzzleBloc>().add(const NextLevel()),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A202C), foregroundColor: Colors.white),
+              child: const Text('Next Level'),
+            ),
+          ],
         ),
       ),
     );
@@ -1145,95 +1060,26 @@ class _GameOverView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<PuzzleBloc>();
     return Center(
-      child: Padding(
+      child: Container(
+        margin: const EdgeInsets.all(32),
         padding: const EdgeInsets.all(32),
-        child: Container(
-          padding: const EdgeInsets.all(36),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.12),
-                blurRadius: 32,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('💔', style: TextStyle(fontSize: 64)),
-              const SizedBox(height: 16),
-              const Text('Game Over',
-                  style: TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A1A1A))),
-              const SizedBox(height: 8),
-              const Text(
-                'You ran out of lives.\nTry again!',
-                style: TextStyle(fontSize: 14, color: Color(0xFF888888)),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => bloc.add(const RestartLevel()),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE53935),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Try Again',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('💔', style: TextStyle(fontSize: 50)),
+            const SizedBox(height: 16),
+            const Text('Game Over', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => context.read<PuzzleBloc>().add(const RestartLevel()),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE53E3E), foregroundColor: Colors.white),
+              child: const Text('Try Again'),
+            ),
+          ],
         ),
       ),
     );
-  }
-}
-
-class PathLine {
-  final Offset start;
-  final Offset end;
-
-  const PathLine({
-    required this.start,
-    required this.end,
-  });
-}
-class MazePathPainter extends CustomPainter {
-  final List<PathLine> paths;
-
-  MazePathPainter(this.paths);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-
-    for (final path in paths) {
-      canvas.drawLine(
-        path.start,
-        path.end,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
   }
 }

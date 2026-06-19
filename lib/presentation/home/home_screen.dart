@@ -27,6 +27,7 @@ import 'package:e_comm_user/utils/constants.dart';
 import 'package:e_comm_user/utils/functions.dart';
 import 'package:e_comm_user/utils/strings.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
+import 'package:e_comm_user/widgets/error_image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -70,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
     categoryBloc.add(const TopCategoryLoadEvent());
     scrollController.addListener(onScroll);
     homeBloc.add(GetHomeEvent(0));
+    getUpdatedAddress();
   }
   @override
   void dispose() {
@@ -87,9 +89,15 @@ class _HomeScreenState extends State<HomeScreen> {
       productBloc.add(ProductListEvent(pageNo, limit, searchController.text, selectedCategoryId));
     }
   }
+  getUpdatedAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    final address = prefs.getString(SharedPrefHelper.userAddress) ?? "";
+    addressStreamController.add(address);
+  }
 
   @override
   Widget build(BuildContext context) {
+    getUpdatedAddress();
     isLoggedIn = prefs.getBool(SharedPrefHelper.isLoginPref) ?? false;
     log("isLoggedIn: $isLoggedIn");
     final double topPadding = MediaQuery.of(context).padding.top;
@@ -109,38 +117,56 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Row(
               children: [
-                Icon(
-                  Icons.location_on_outlined,
-                  color: greyColor.withValues(alpha: .6),
-                  size: 18.px,
-                ),
-                const SizedBox(width: 4),
+                // Icon(
+                //   Icons.location_on_outlined,
+                //   color: greyColor.withValues(alpha: .6),
+                //   size: 18.px,
+                // ),
+                // const SizedBox(width: 4),
                 if (hasAddress)
                   Expanded(
-                    child: CustomText(
-                      text: address,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      fontSize: 12.px,
+                    child: StreamBuilder<String>(
+                      initialData: address,
+                      stream: deliveryAddressStream,
+                      builder: (context, snapshot) {
+                        return snapshot.hasData
+                            ? CustomText(
+                          text: '📍 ${snapshot.data}' ?? '',
+                          fontSize: 12.px,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                            : CustomText(
+                          text: snapshot.error?.toString() ?? '',
+                          fontSize: 20.px,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        );
+                      },
                     ),
                   )
                 else ...[
-                  CustomText(text: noAddress, fontSize: 12.px),
-                  const Spacer(),
-                  TextButton(
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    onPressed: () {},
-                    child: CustomText(
-                      text: addAddress,
-                      style: CustomTextStyle.bold,
-                      color: primaryColor,
-                      fontSize: 12.px,
-                    ),
-                  ),
+                  // CustomText(text: '📍$noAddress', fontSize: 12.px),
+                  // const Spacer(),
+                  // TextButton(
+                  //   style: TextButton.styleFrom(
+                  //     padding: EdgeInsets.zero,
+                  //     minimumSize: Size.zero,
+                  //     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  //   ),
+                  //   onPressed: () {
+                  //     if(isLoggedIn){
+                  //       getIt<AppRoutes>().push(CreateAddressRoute());
+                  //     }else{
+                  //       Functions.showCustomSnackBar(context, message: loginToAddress);
+                  //     }
+                  //   },
+                  //   child: CustomText(
+                  //     text: addAddress,
+                  //     style: CustomTextStyle.bold,
+                  //     color: primaryColor,
+                  //     fontSize: 12.px,
+                  //   ),
+                  // ),
                 ],
               ],
             ),
@@ -194,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    title: CustomText(text: appName, fontSize: 20.sp),
+                    title: CustomText(text: appName, fontSize: 20.sp,),
                     actions: [
                       Visibility(
                         visible: true,
@@ -701,19 +727,22 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius:
-              const BorderRadius.only(
-                topLeft:Radius.circular(12),
-                topRight:Radius.circular(12),
+              borderRadius: BorderRadius.only(
+                topLeft:Radius.circular(1.h),
+                topRight:Radius.circular(1.h),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(1.h)),
                 child: CachedNetworkImage(
                   imageUrl: imageUrl ?? '',
                   fit: BoxFit.cover,
                   width: double.infinity,
                   placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                  errorWidget: (context, url, error) => Icon(Icons.error),
+                  errorWidget: (context, url, error) => SizedBox(
+                      height: double.infinity,
+                      width: double.infinity,
+                      child: ErrorImageWidget(),
+                  ),
                 )
               ),
             ),

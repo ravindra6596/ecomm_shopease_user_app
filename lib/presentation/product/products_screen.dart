@@ -1,6 +1,4 @@
 // ignore_for_file: must_be_immutable
-import 'dart:math';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:e_comm_user/bloc/category/category_bloc.dart';
@@ -27,6 +25,7 @@ import 'package:e_comm_user/utils/strings.dart';
 import 'package:e_comm_user/widgets/custom_button.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
 import 'package:e_comm_user/widgets/custom_text_field.dart';
+import 'package:e_comm_user/widgets/error_image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -100,77 +99,86 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ],
         child: Column(
           children: [
-            SizedBox(height: 2.h,),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: BlocBuilder<SearchBloc, SearchState>(
-                        builder: (context, state) {
-                        return Stack(
-                          alignment: Alignment.centerLeft,
-                          children: [
-                            CustomTextField(
-                              controller: searchController,
-                              hintText: '',
-                              labelText: '',
-                              prefixIcon:  Icons.search ,
-                              onChanged: (value) {
-                                // productBloc.add(ProductSearchEvent(value));
-                                productBloc.add(ProductListEvent(pageNo, limit, value, selectedCategoryId));
-                              },
-                              textInputAction: TextInputAction.search,
-                              onSubmitted: (value) {
-                                productBloc.add(ProductListEvent(pageNo, limit, value, selectedCategoryId));
-                              },
-                            ),
-                            ValueListenableBuilder(
-                                valueListenable: searchController,
-                                builder: (_, value, __) {
-                                return Visibility(
-                                  visible:(value.text.isEmpty),
-                                  child: IgnorePointer(
-                                    child: Padding(
-                                      padding: EdgeInsets.only(left: 13.w,top: .7.h),
-                                      child: AnimatedSwitcher(
-                                        duration: const Duration(milliseconds: 300),
-                                        child: CustomText(
-                                          text:state.hint,
-                                          key: ValueKey(state.hint),
-                                            color: greyColor.withValues(alpha: .5),
-                                            fontSize: 16,
+            Container(
+              color: primaryColor.withValues(alpha: .1),
+              padding: EdgeInsets.all(1.h),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 2.h),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => getIt<AppRoutes>().pop(),
+                      child: const Icon(Icons.arrow_back_ios_outlined, ),
+                    ),
+                    SizedBox(width: 5.w),
+                    Expanded(
+                      child: BlocBuilder<SearchBloc, SearchState>(
+                          builder: (context, state) {
+                          return Stack(
+                            alignment: Alignment.centerLeft,
+                            children: [
+                              CustomTextField(
+                                controller: searchController,
+                                hintText: '',
+                                labelText: '',
+                                fillColor: whiteColor,
+                                prefixIcon:  Icons.search ,
+                                onChanged: (value) {
+                                  // productBloc.add(ProductSearchEvent(value));
+                                  productBloc.add(ProductListEvent(pageNo, limit, value, selectedCategoryId));
+                                },
+                                textInputAction: TextInputAction.search,
+                                onSubmitted: (value) {
+                                  productBloc.add(ProductListEvent(pageNo, limit, value, selectedCategoryId));
+                                },
+                              ),
+                              ValueListenableBuilder(
+                                  valueListenable: searchController,
+                                  builder: (_, value, __) {
+                                  return Visibility(
+                                    visible:(value.text.isEmpty),
+                                    child: IgnorePointer(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(left: 13.w,top: .7.h),
+                                        child: AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 300),
+                                          child: CustomText(
+                                            text:state.hint,
+                                            key: ValueKey(state.hint),
+                                              color: greyColor.withValues(alpha: .5),
+                                              fontSize: 16,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              }
-                            ),
-                          ],
-                        );
-                      }
+                                  );
+                                }
+                              ),
+                            ],
+                          );
+                        }
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 2.w),
-                  BlocBuilder<FilterBloc, FilterState>(
-                    builder: (context, state) {
+                    SizedBox(width: 3.w),
+                    BlocBuilder<FilterBloc, FilterState>(
+                      builder: (context, state) {
 
-                      return Padding(
-                        padding: EdgeInsets.only(top: 1.5.h),
-                        child: IconButton(
-                          style: IconButton.styleFrom(
-                            padding: EdgeInsets.zero,
+                        return Padding(
+                          padding: EdgeInsets.only(top:  1.h),
+                          child: IconButton(
+                            style: IconButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                            ),
+                            onPressed: () {
+                              showFilterBottomSheet(context);
+                            },
+                            icon: SvgPicture.asset(state.productFilter.isFilterApplied ? filterIcon : noFilterIcon,height: 6.h,),
                           ),
-                          onPressed: () {
-                            showFilterBottomSheet(context);
-                          },
-                          icon: SvgPicture.asset(state.productFilter.isFilterApplied ? filterIcon : noFilterIcon),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
             Expanded(
@@ -182,7 +190,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   else if (state is ProductSuccessState) {
                     productResponseModel = state.productResponseModel;
                     isLoadingMore = false;
-              
+
                     if ((state.productResponseModel.data?.items?.length ?? 0) < pageNo * limit) {
                       hasMoreData = false;
                     }
@@ -235,10 +243,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                               placeholder: (context, url) => Center(child: CircularProgressIndicator()),
                                               errorWidget: (context, url, error) => Icon(Icons.error),
                                             )
-                                          : Container(
-                                              color: Colors.grey[200],
-                                              child: Center(child: Icon(Icons.image, size: 50, color: Colors.grey)),
-                                            ),
+                                          : ErrorImageWidget()
                                     ),
                                     Positioned(
                                          right: 0.w,

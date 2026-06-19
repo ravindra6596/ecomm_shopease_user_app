@@ -136,7 +136,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
                     if (messages.isEmpty) {
                       return const Center(
-                        child: Text("No chats yet"),
+                        child: CustomText(
+                            text:"No chats yet"),
                       );
                     }
 
@@ -170,6 +171,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         );
                       },
                     );
+                  }
+                  else if(state is ChatbotErrorState){
+                    return Center(child: CustomText(text: state.error));
                   }
                   return const SizedBox.shrink();
                 },
@@ -262,12 +266,10 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ),
         ),
         alignment: Alignment.center,
-        child: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        child: CustomText(
+          text:  title,
+             style: CustomTextStyle.medium,
+         ),
       ),
     );
   }
@@ -346,7 +348,8 @@ class ChatBubble extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: Text(p.name ?? '')),
+                      Expanded(child: CustomText(
+                          text:p.name ?? '')),
                       CustomText(text:"₹${Functions.formatPrice(p.price ?? 0)}"),
                     ],
                   ),

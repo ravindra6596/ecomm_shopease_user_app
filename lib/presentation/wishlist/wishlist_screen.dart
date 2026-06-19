@@ -14,6 +14,7 @@ import 'package:e_comm_user/utils/strings.dart';
 import 'package:e_comm_user/widgets/cart/empty_cart_widget.dart';
 import 'package:e_comm_user/widgets/custom_appbar.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
+import 'package:e_comm_user/widgets/error_image_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -96,73 +97,49 @@ class _WishlistScreenState
           },
 
           buildWhen: (previous, current) =>
-          current
-          is WishlistLoadingState ||
-              current
-              is WishlistLoadedState ||
-              current
-              is WishlistErrorState ||
-              current
-              is SyncWishlistLoadingState,
+          current is WishlistLoadingState ||
+              current is WishlistLoadedState ||
+              current is WishlistErrorState ||
+              current is SyncWishlistLoadingState,
 
           builder: (context, state) {
-            if (state
-            is WishlistLoadingState &&
-                wishlistBloc
-                    .currentWishlistItems
-                    .isEmpty) {
+            if (state is WishlistLoadingState && wishlistBloc.currentWishlistItems.isEmpty) {
               return const Center(
-                child:
-                CircularProgressIndicator(),
+                child: CircularProgressIndicator(),
               );
             }
 
-            if (state
-            is SyncWishlistLoadingState) {
+            if (state is SyncWishlistLoadingState) {
               return Stack(
                 children: [
-                  _buildWishlistContent(
-                    wishlistBloc
-                        .currentWishlistItems,
-                  ),
-
+                  _buildWishlistContent(wishlistBloc.currentWishlistItems),
                   const Center(
-                    child:
-                    CircularProgressIndicator(),
+                    child: CircularProgressIndicator(),
                   ),
                 ],
               );
             }
 
-            if (state
-            is WishlistLoadedState) {
-              return _buildWishlistContent(
-                state.items,
-              );
+            if (state is WishlistLoadedState) {
+              return _buildWishlistContent(state.items);
             }
 
-            if (state
-            is WishlistErrorState &&
-                wishlistBloc
-                    .currentWishlistItems
-                    .isEmpty) {
+            if (state is WishlistErrorState && wishlistBloc.currentWishlistItems.isEmpty) {
               return Center(
-                child: Text(state.error),
+                child: CustomText(
+                    text:state.error),
               );
             }
 
-            if (wishlistBloc
-                .currentWishlistItems
-                .isNotEmpty) {
+            if (wishlistBloc.currentWishlistItems.isNotEmpty) {
               return _buildWishlistContent(
-                wishlistBloc
-                    .currentWishlistItems,
+                wishlistBloc.currentWishlistItems,
               );
             }
 
-            return const Center(
-              child: Text(
-                'Wishlist is empty',
+            return Center(
+              child: CustomText(
+                text: wishlistEmpty,
               ),
             );
           },
@@ -196,18 +173,12 @@ class _WishlistScreenState
         4.w,
         2.h,
       ),
-
       itemCount: items.length,
-
       itemBuilder: (context, index) {
         final item = items[index];
-
-        final productId =
-            item.product_id ?? 0;
-
+        final productId =  item.product_id ?? 0;
         return WishlistItemWidget(
           item: item,
-
           onTap: productId > 0
               ? () => context.router.push(
             ProductDetailsRoute(
@@ -218,20 +189,20 @@ class _WishlistScreenState
               : null,
 
           onRemove: () {
-            wishlistBloc.add(
-              RemoveFromWishlistEvent(
-                productId,
-                wishlistItemId:
-                item.id,
-              ),
-            );
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              wishlistBloc.add(
+                RemoveFromWishlistEvent(
+                  productId,
+                  wishlistItemId:
+                  item.id,
+                ),
+              );
+            },);
 
             Functions.showCustomSnackBar(
               context,
-              message:
-              'Item removed from wishlist',
-              backgroundColor:
-              errorColor,
+              message: removeWishlist,
+              backgroundColor: errorColor,
             );
           },
         );
@@ -284,18 +255,7 @@ class WishlistItemWidget extends StatelessWidget {
                       ),
                     ),
                 errorWidget:
-                    (context, url, error) =>
-                    Container(
-                      width: 24.w,
-                      height: 24.w,
-                      color:
-                      greyColor.withValues(alpha: 0.1),
-                      child: Icon(
-                        Icons.image_not_supported,
-                        color: greyColor,
-                        size: 8.w,
-                      ),
-                    ),
+                    (context, url, error) => ErrorImageWidget(),
               ),
             ),
 
@@ -307,16 +267,14 @@ class WishlistItemWidget extends StatelessWidget {
                 crossAxisAlignment:
                 CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item.product_name ?? '',
+                  CustomText(
+                    text: item.product_name ?? '',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: blackColor,
-                    ),
-                  ),
+                       fontSize: 15.sp,
+                       style: CustomTextStyle.medium,
+                       color: blackColor,
+                   ),
 
                    
 

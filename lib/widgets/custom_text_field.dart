@@ -20,6 +20,7 @@ class CustomTextField extends StatelessWidget {
   final int? maxLength;
   final bool? enabled;
   final TextInputAction? textInputAction;
+  final Color? fillColor;
 
 
     const CustomTextField({
@@ -37,7 +38,8 @@ class CustomTextField extends StatelessWidget {
       this.onSubmitted,
       this.maxLength,
       this.enabled,
-      this.textInputAction
+      this.textInputAction,
+      this.fillColor
   });
 
   @override
@@ -76,7 +78,8 @@ class CustomTextField extends StatelessWidget {
               validator: validator,
               decoration: InputDecoration(
                 counter: SizedBox.shrink(),
-                hintText: hintText,
+                hintText: hintText,filled: true,
+                fillColor: fillColor ?? Colors.transparent,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(1.h),
                   borderSide: BorderSide(color: primaryColor)

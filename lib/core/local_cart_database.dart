@@ -22,7 +22,7 @@ class LocalCartDatabase {
 
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'cart.db');
+    final path = join(dbPath, 'shopease.db');
 
     return await openDatabase(
       path,

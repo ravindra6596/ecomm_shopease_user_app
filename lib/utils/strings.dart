@@ -211,8 +211,15 @@ String offersText = 'Offers';
 String buyNowAt = 'Buy now at';
 String discount = 'Discount';
 String protectPromiseFee = 'Protect Promise Fee';
-
-
+String loginToAddress = 'Please Login to add new address';
+String youSaved = 'You saved ';
+String onThisOrder = ' on this order 🎉';
+String removeWishlist = 'Item removed from wishlist';
+const String downloading = "Downloading";
+const String fileDownLoaded = "File Downloaded Successfully.";
+const String downloadFailed = "Download Failed!.";
+const String downloadFailedURL = "Download Failed due to URL is invalid.";
+const String allowPermission = "Allow the permission";
 
 
 

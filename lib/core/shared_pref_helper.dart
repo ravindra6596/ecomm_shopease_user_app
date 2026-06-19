@@ -15,6 +15,7 @@ class SharedPrefHelper {
   static const String rememberMeKey = 'rememberMeKey';
   static const String savedEmailKey = 'savedEmailKey';
   static const String savedPasswordKey = 'savedPasswordKey';
+  static const String userAddress = 'userAddress';
 
   static Future<void> saveTokens(String accessToken, String refreshToken) async {
     final prefs = await SharedPreferences.getInstance();
@@ -126,5 +127,9 @@ class SharedPrefHelper {
       'email': prefs.getString(savedEmailKey) ?? '',
       'password': prefs.getString(savedPasswordKey) ?? '',
     };
+  }
+  static Future<String?> getUserAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(userAddress);
   }
 }

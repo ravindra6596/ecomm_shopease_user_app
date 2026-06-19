@@ -1,3 +1,5 @@
+import 'package:e_comm_user/utils/colors.dart';
+import 'package:e_comm_user/widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -33,25 +35,23 @@ class CartErrorWidget extends StatelessWidget {
               ),
             ),
             SizedBox(height: 2.5.h),
-            Text(
+            CustomText(
+              text:
               'Something went wrong',
-              style: TextStyle(
                 fontSize: 18.sp,
-                fontWeight: FontWeight.w700,
+                style: CustomTextStyle.semiBold,
                 color: Colors.black87,
-              ),
             ),
             SizedBox(height: 1.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 4.w),
-              child: Text(
+              child: CustomText(
+                text:
                 error,
                 textAlign: TextAlign.center,
-                style: TextStyle(
                   fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.grey[600],
-                ),
+                  style: CustomTextStyle.regular,
+                  color: greyColor.withValues(alpha: .6),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -70,13 +70,11 @@ class CartErrorWidget extends StatelessWidget {
                   ),
                   elevation: 0,
                 ),
-                child: Text(
-                  'Try Again',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: CustomText(
+                  text: 'Try Again',
+                     fontSize: 16.sp,
+                    style: CustomTextStyle.semiBold,
+                 ),
               ),
             ),
           ],

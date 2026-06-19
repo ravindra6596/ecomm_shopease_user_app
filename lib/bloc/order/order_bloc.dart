@@ -163,6 +163,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
   // order invoice
   orderInvoiceMethod(OrderInvoiceEvent event, emit) async {
+    // emit(OrderInvoiceLoadingState());
     final orderDetails = await orderRepository!.getOrderInvoice(event.id);
 
     switch (orderDetails) {

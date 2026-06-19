@@ -3,6 +3,7 @@ import 'package:e_comm_user/utils/functions.dart';
 import 'package:e_comm_user/utils/strings.dart';
 import 'package:e_comm_user/widgets/custom_button.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
+import 'package:e_comm_user/widgets/saved_price_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -26,7 +27,7 @@ class CartSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalDiscount = subtotal - discountAmount;
+    final totalDiscount = (subtotal - discountAmount).round();
     final shippingFeeAmount = (totalDiscount *10/100).round();
     final grandTotalAmount = discountAmount + shippingFeeAmount;
     final savings = totalDiscount - shippingFeeAmount;
@@ -50,49 +51,8 @@ class CartSummaryWidget extends StatelessWidget {
           ),
           SummaryRow(label: total, value: grandTotalAmount, isTotal: true),
           SizedBox(height: 2.h),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
-            decoration: BoxDecoration(
-              color: successColor.withValues(alpha: .2),
-              borderRadius: BorderRadius.circular(1.h),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  color: successColor,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: blackColor.withValues(alpha: .7),
-                      ),
-                      children: [
-                        const TextSpan(text: 'You saved '),
-                        TextSpan(
-                          text: Functions.formatInr(savings),
-                          style: TextStyle(
-                            color: successColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                        const TextSpan(text: ' on this order'),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          SavedPriceWidget(savingAmount: savings),
+          SizedBox(height: 1.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

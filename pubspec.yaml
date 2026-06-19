@@ -64,6 +64,11 @@ dependencies:
   audioplayers: ^6.6.0
   open_filex: ^4.7.0
   carousel_slider: ^5.1.2
+  share_plus: ^12.0.2
+  background_downloader: ^9.5.5
+  open_file_plus: ^3.4.1+1
+  url_launcher: ^6.3.2
+  device_info_plus: ^11.3.0
 
 dev_dependencies:
   flutter_test:
@@ -111,7 +116,7 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Inter
+    - family: GoogleSans
       fonts:
         - asset: assets/fonts/GoogleSans-Regular.ttf
           weight: 400

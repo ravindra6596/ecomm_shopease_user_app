@@ -1,10 +1,10 @@
 // ignore_for_file: must_be_immutable
-import 'dart:developer';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:e_comm_user/bloc/address/address_bloc.dart';
 import 'package:e_comm_user/bloc/address/address_event.dart';
 import 'package:e_comm_user/bloc/address/address_state.dart';
+import 'package:e_comm_user/bloc/home/home_bloc.dart';
+import 'package:e_comm_user/bloc/home/home_event.dart';
 import 'package:e_comm_user/bloc/order/order_bloc.dart';
 import 'package:e_comm_user/di/configure.dart';
 import 'package:e_comm_user/models/address_request_model.dart';
@@ -34,6 +34,7 @@ class AddressListScreen extends StatefulWidget {
 class _AddressListScreenState extends State<AddressListScreen> {
   AddressBloc addressBloc = getIt.get<AddressBloc>();
   OrderBloc orderBloc = getIt.get<OrderBloc>();
+  HomeBloc homeBloc = getIt.get<HomeBloc>();
 
 
   @override
@@ -66,6 +67,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   Functions.showCustomSnackBar(context, message: state.message,backgroundColor: successColor);
                   await Future.delayed(const Duration(milliseconds: 200));
                   addressBloc.add(AddressListEvent());
+                  homeBloc.add(GetHomeEvent(0));
                   getIt<AppRoutes>().pop(true);
                 }
                 else if(state is AddressErrorState){
@@ -247,7 +249,8 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                                     children: const [
                                                       Icon(Icons.edit, size: 18),
                                                       SizedBox(width: 10),
-                                                      Text("Edit"),
+                                                      CustomText(
+                                                          text:"Edit"),
                                                     ],
                                                   ),
                                                 ),
@@ -257,7 +260,8 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                                     children: const [
                                                       Icon(Icons.delete, size: 18, color: Colors.red),
                                                       SizedBox(width: 10),
-                                                      Text("Delete"),
+                                                      CustomText(
+                                                          text:"Delete"),
                                                     ],
                                                   ),
                                                 ),

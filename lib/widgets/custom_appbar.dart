@@ -2,6 +2,9 @@ import 'package:e_comm_user/di/configure.dart';
 import 'package:e_comm_user/routes/app_routes.dart';
 import 'package:e_comm_user/utils/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:responsive_sizer/responsive_sizer.dart';
+
+import 'custom_text.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -26,7 +29,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: backgroundColor,
       surfaceTintColor: whiteColor,
-      title: Text(title),
+      title: CustomText(
+        text:title,
+      fontSize: 20.px,),
       centerTitle: centerTitle,
       leading: showBackButton
           ? IconButton(

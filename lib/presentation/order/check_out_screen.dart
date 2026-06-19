@@ -22,6 +22,7 @@ import 'package:e_comm_user/widgets/cart/cart_summary_widget.dart';
 import 'package:e_comm_user/widgets/custom_appbar.dart';
 import 'package:e_comm_user/widgets/custom_button.dart';
 import 'package:e_comm_user/widgets/custom_text.dart';
+import 'package:e_comm_user/widgets/saved_price_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -161,10 +162,10 @@ class _CheckoutScreenState extends State<CheckoutScreen>
                         const vat = 0;
                         final totalAmt = subtotal + shipping + vat;
 
-                        final totalDiscount = subtotal - discountAmount;
+                        final totalDiscount = (subtotal - discountAmount).round();
                         final shippingFeeAmount = (totalDiscount *10/100).round();
                         final grandTotalAmount = discountAmount + shippingFeeAmount;
-                        final savings = subtotal - discountAmount;
+                        final savings = totalDiscount - shippingFeeAmount;
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,49 +185,8 @@ class _CheckoutScreenState extends State<CheckoutScreen>
                               child: Divider(color: dividerColor,height: 1),
                             ),
                             SummaryRow(label: total,value: grandTotalAmount,isTotal: true),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: successColor.withValues(alpha: .2),
-                                borderRadius: BorderRadius.circular(1.h),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: successColor,
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: RichText(
-                                      text: TextSpan(
-                                        style: TextStyle(
-                                          fontSize: 14.sp,
-                                          color: blackColor.withValues(alpha: .7),
-                                        ),
-                                        children: [
-                                          const TextSpan(text: 'You saved '),
-                                          TextSpan(
-                                            text: Functions.formatInr(savings),
-                                            style: TextStyle(
-                                              color: successColor,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14.sp,
-                                            ),
-                                          ),
-                                          const TextSpan(text: ' on this order'),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            SizedBox(height: 1.h),
+                            SavedPriceWidget(savingAmount: savings),
                           ],
                         );
                       },
@@ -390,13 +350,11 @@ class _CheckoutScreenState extends State<CheckoutScreen>
             duration: const Duration(milliseconds: 200),
             scale: isSelected ? 1.05 : 1.0,
             child: Center(
-              child: Text(
-                title,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: CustomText(
+                text:  title,
+                   color: isSelected ? whiteColor : blackColor,
+                  style: CustomTextStyle.semiBold,
+               ),
             ),
           ),
         ),

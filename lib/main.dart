@@ -6,6 +6,7 @@ import 'package:e_comm_user/core/shared_pref_helper.dart';
 import 'package:e_comm_user/di/configure.dart';
 import 'package:e_comm_user/routes/app_routes.dart';
 import 'package:e_comm_user/service/notification_service.dart';
+import 'package:e_comm_user/utils/strings.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -68,6 +69,7 @@ class _MyAppState extends State<MyApp> {
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
+            fontFamily: fontFamilyText
           ),
           routerConfig: appRouter.config(),
         );

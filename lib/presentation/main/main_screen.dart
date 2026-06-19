@@ -7,7 +7,6 @@ import 'package:e_comm_user/bloc/navigation/navigation_bloc.dart';
 import 'package:e_comm_user/bloc/navigation/navigation_event.dart';
 import 'package:e_comm_user/bloc/navigation/navigation_state.dart';
 import 'package:e_comm_user/bloc/wishlist/wishlist_bloc.dart';
-import 'package:e_comm_user/bloc/wishlist/wishlist_bloc.dart';
 import 'package:e_comm_user/bloc/wishlist/wishlist_state.dart';
 import 'package:e_comm_user/di/configure.dart';
 import 'package:e_comm_user/presentation/account/account_screen.dart';
@@ -110,6 +109,7 @@ class _MainScreenState extends State<MainScreen> {
                   children: _screens,
                 ),
                 bottomNavigationBar: BottomNavigationBar(
+                  backgroundColor: whiteColor,
                   currentIndex: currentIndex,
                   selectedItemColor: primaryColor,
                   unselectedItemColor: greyColor,

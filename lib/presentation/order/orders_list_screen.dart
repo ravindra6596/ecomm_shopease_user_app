@@ -74,185 +74,210 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
           BlocProvider(create: (context) => navigationBloc),
           BlocProvider(create: (context) => filterBloc),
         ],
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                Expanded(
-                  child: CustomTextField(
-                    controller: searchController,
-                    hintText: 'Search orders...',
-                    labelText: '',
-                    prefixIcon:  Icons.search ,
-                    onChanged: (value) {
-                      orderBloc.add(OrderListEvent(pageNo, limit, value,));
-                    },
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (value) {
-                      orderBloc.add(OrderListEvent(pageNo, limit, value,));
+        child: RefreshIndicator(
+          onRefresh: () async{
+            orderBloc.add(OrderListEvent(pageNo, limit, ''));
+          },
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                  Expanded(
+                    child: CustomTextField(
+                      controller: searchController,
+                      hintText: 'Search orders...',
+                      labelText: '',
+                      prefixIcon:  Icons.search ,
+                      onChanged: (value) {
+                        orderBloc.add(OrderListEvent(pageNo, limit, value,));
+                      },
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (value) {
+                        orderBloc.add(OrderListEvent(pageNo, limit, value,));
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 2.w),
+                  BlocBuilder<FilterBloc, FilterState>(
+                    builder: (context, state) {
+                      return Padding(
+                        padding: EdgeInsets.only(top: 1.5.h),
+                        child: IconButton(
+                          style: IconButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                          ),
+                          onPressed: () {
+                            showFilterBottomSheet(context);
+                          },
+                          icon: SvgPicture.asset(state.orderFilter.isFilterApplied ? filterIcon : noFilterIcon),
+                        ),
+                      );
                     },
                   ),
+                ],
                 ),
-                SizedBox(width: 2.w),
-                BlocBuilder<FilterBloc, FilterState>(
-                  builder: (context, state) {
-                    return Padding(
-                      padding: EdgeInsets.only(top: 1.5.h),
-                      child: IconButton(
-                        style: IconButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                        ),
-                        onPressed: () {
-                          showFilterBottomSheet(context);
-                        },
-                        icon: SvgPicture.asset(state.orderFilter.isFilterApplied ? filterIcon : noFilterIcon),
-                      ),
-                    );
-                  },
-                ),
-              ],
               ),
-            ),
-            BlocBuilder<OrderBloc, OrderState>(
-              builder: (context, state) {
-                if (state is OrderLoadingState) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                else if (state is OrderSuccessState) {
-                  orderResponseModel = state.orderResponseModel;
-                  isLoadingMore = false;
-
-                  if ((state.orderResponseModel.data?.items?.length ?? 0) < pageNo * limit) {
-                    hasMoreData = false;
+              BlocBuilder<OrderBloc, OrderState>(
+                builder: (context, state) {
+                  if (state is OrderLoadingState) {
+                    return SizedBox(
+                        height: MediaQuery.of(context).size.height / 1.5,
+                        child: Center(child: CircularProgressIndicator()));
                   }
-                  return state.orderResponseModel.data!.items!.isEmpty ?
-                  Expanded(
-                    child: NoDataFoundWidget(
-                      title: noOrdersFound,
-                      subtitle: '',
+                  else if (state is OrderSuccessState) {
+                    orderResponseModel = state.orderResponseModel;
+                    isLoadingMore = false;
 
-                    ),
-                  )
-                : Expanded(
-                    child: ListView.builder(
-                      controller: scrollController,
-                      shrinkWrap: true,
-                      itemCount: (orderResponseModel.data?.items?.length ?? 0) + 1,
-                      padding: EdgeInsets.all(10),
-                      itemBuilder: (context, index) {
-                        if (index == orderResponseModel.data?.items?.length) {
-                          return state.hasMore
-                              ? const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Center(child: CircularProgressIndicator()),)
-                              : const SizedBox();
-                        }
-                        final order = orderResponseModel.data?.items?[index];
-                        return GestureDetector(
-                          onTap: () {
-                            getIt<AppRoutes>().push(OrderDetailsRoute(orderId: order?.id ?? 0));
-                          },
-                          child: Container(
-                            margin: EdgeInsets.only(bottom: 2.h),
-                            padding: EdgeInsets.all(3.w),
-                            decoration: BoxDecoration(
-                              color: whiteColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: dividerColor),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ProductThumbnail(imageUrl: order?.items![0].image_url ?? ''),
-                                SizedBox(width: 3.w),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: CustomText(
-                                              text: order?.items![0].product_name ?? '',
-                                              style: CustomTextStyle.semiBold,
-                                              fontSize: 15.sp,
-                                              color: blackColor,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
+                    if ((state.orderResponseModel.data?.items?.length ?? 0) < pageNo * limit) {
+                      hasMoreData = false;
+                    }
+                    return state.orderResponseModel.data!.items!.isEmpty ?
+                    Expanded(
+                      child: NoDataFoundWidget(
+                        title: noOrdersFound,
+                        subtitle: '',
+
+                      ),
+                    )
+                  : Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        shrinkWrap: true,
+                        itemCount: (orderResponseModel.data?.items?.length ?? 0) + 1,
+                        padding: EdgeInsets.all(10),
+                        itemBuilder: (context, index) {
+                          if (index == orderResponseModel.data?.items?.length) {
+                            return state.hasMore
+                                ? const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(child: CircularProgressIndicator()),)
+                                : const SizedBox();
+                          }
+                          final order = orderResponseModel.data?.items?[index];
+                          final subtotal = order?.total_amount ?? 0;
+                          final discount = order?.total_discount_price ?? 0;
+                          final shipping = order?.shipping ?? 0;
+
+                          final totalAmount = shipping + discount;
+                          return GestureDetector(
+                            onTap: () {
+                              getIt<AppRoutes>().push(OrderDetailsRoute(orderId: order?.id ?? 0));
+                            },
+                            child: Container(
+                              margin: EdgeInsets.only(bottom: 2.h),
+                              padding: EdgeInsets.all(3.w),
+                              decoration: BoxDecoration(
+                                color: whiteColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: dividerColor),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ProductThumbnail(imageUrl: order?.items![0].image_url ?? ''),
+                                  SizedBox(width: 3.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: CustomText(
+                                                text: order?.items![0].product_name ?? '',
+                                                style: CustomTextStyle.semiBold,
+                                                fontSize: 15.sp,
+                                                color: blackColor,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 1.h),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Expanded(
-                                            child: CustomText(
-                                              text: Functions.formatInr(order?.total_amount ?? 0),
-                                              style: CustomTextStyle.bold,
-                                              fontSize: 15.sp,
-                                              color: blackColor,
+                                          ],
+                                        ),
+                                        SizedBox(height: 1.h),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: CustomText(
+                                                text: Functions.formatInr(subtotal),
+                                                style: CustomTextStyle.bold,
+                                                fontSize: 15.sp,
+                                                color: greyColor,
+                                                decoration: TextDecoration.lineThrough,
+                                                decorationColor: greyColor,
+                                              ),
                                             ),
-                                          ),
-                                      /// STATUS
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                              horizontal: 3.w,
-                                              vertical: .7.h,
+                                            Expanded(
+                                              child: CustomText(
+                                                text: Functions.formatInr(totalAmount),
+                                                style: CustomTextStyle.bold,
+                                                fontSize: 15.sp,
+                                                color: successColor,
+                                              ),
                                             ),
-                                            decoration: BoxDecoration(
-                                              color: getOrderStatusColor(
-                                                order?.status ?? '',
-                                              ).withValues(alpha: .1),
-                                              borderRadius: BorderRadius.circular(.8.h),
-                                              border: Border.all(
+                                        /// STATUS
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 3.w,
+                                                vertical: .7.h,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: getOrderStatusColor(
+                                                  order?.status ?? '',
+                                                ).withValues(alpha: .1),
+                                                borderRadius: BorderRadius.circular(.8.h),
+                                                border: Border.all(
+                                                  color: getOrderStatusColor(
+                                                    order?.status ?? '',
+                                                  ),
+                                                ),
+                                              ),
+                                              child: CustomText(
+                                                text: (order?.status ?? '').toUpperCase(),
+                                                style: CustomTextStyle.bold,
+                                                fontSize: 12.sp,
                                                 color: getOrderStatusColor(
                                                   order?.status ?? '',
                                                 ),
+                                                maxLines: 3,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
-                                            child: CustomText(
-                                              text: (order?.status ?? '').toUpperCase(),
-                                              style: CustomTextStyle.bold,
-                                              fontSize: 12.sp,
-                                              color: getOrderStatusColor(
-                                                order?.status ?? '',
-                                              ),
-                                              maxLines: 3,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                      SizedBox(height: 1.2.h),
+                                        SizedBox(height: 1.2.h),
 
-                                    ],
-                                  ),
-                                      CustomText(
-                                        text: Functions.formatDateTime(order?.created_at ?? ''),
-                                        style: CustomTextStyle.medium,
-                                        fontSize: 12.px,
-                                        color: greyColor,
-                                      ),
-                               ] ),
-                          ),
-                              ],
+                                      ],
+                                    ),
+                                        CustomText(
+                                          text: Functions.formatDateTime(order?.created_at ?? '',format: 'dd MMM yyyy'),
+                                          style: CustomTextStyle.medium,
+                                          fontSize: 12.px,
+                                          color: greyColor,
+                                        ),
+                                 ] ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                }
-                else if(state is OrderErrorState){
-                  return Center(child: CustomText(text: state.message, color: errorColor));
-                }
-                return SizedBox();
-              },
-            ),
-          ],
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }
+                  else if(state is OrderErrorState){
+                    return SizedBox(
+                      height: MediaQuery.of(context).size.height / 1.5,
+                        child: Center(child: CustomText(text: state.message, color: errorColor)),
+                    );
+                  }
+                  return SizedBox();
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

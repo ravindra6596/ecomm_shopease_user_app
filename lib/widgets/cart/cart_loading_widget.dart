@@ -1,3 +1,5 @@
+import 'package:e_comm_user/utils/colors.dart';
+import 'package:e_comm_user/widgets/custom_text.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -21,14 +23,13 @@ class CartLoadingWidget extends StatelessWidget {
             ),
           ),
           SizedBox(height: 2.h),
-          Text(
+          CustomText(
+            text:
             'Loading your cart...',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
-            ),
-          ),
+               fontSize: 16.sp,
+              style: CustomTextStyle.regular,
+              color: greyColor.withValues(alpha: .6),
+           ),
         ],
       ),
     );
@@ -41,7 +42,7 @@ class SyncCartLoadingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withOpacity(0.5),
+      color: blackColor.withValues(alpha: .5),
       child: Center(
         child: Container(
           padding: EdgeInsets.all(5.w),
@@ -63,14 +64,13 @@ class SyncCartLoadingWidget extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 2.h),
-              Text(
+              CustomText(
+                text:
                 'Syncing your cart...',
-                style: TextStyle(
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                ),
-              ),
+                   fontSize: 15.sp,
+                  style: CustomTextStyle.medium,
+                  color: blackColor.withValues(alpha: .7),
+               ),
             ],
           ),
         ),

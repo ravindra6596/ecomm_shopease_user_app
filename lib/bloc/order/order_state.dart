@@ -30,8 +30,9 @@ class OrderErrorState extends OrderState {
   OrderErrorState(this.message);
   List<Object> get props => [message];
 }
-class OrderInvoiceLoadedState
-    extends OrderState {
+
+class OrderInvoiceLoadingState extends OrderState {}
+class OrderInvoiceLoadedState extends OrderState {
 
   final List<int> bytes;
   final int orderId;

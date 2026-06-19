@@ -4,9 +4,12 @@ import 'package:auto_route/annotations.dart';
 import 'package:e_comm_user/bloc/address/address_bloc.dart';
 import 'package:e_comm_user/bloc/address/address_event.dart';
 import 'package:e_comm_user/bloc/address/address_state.dart';
+import 'package:e_comm_user/bloc/home/home_bloc.dart';
+import 'package:e_comm_user/bloc/home/home_event.dart';
 import 'package:e_comm_user/bloc/map/map_bloc.dart';
 import 'package:e_comm_user/bloc/map/map_event.dart';
 import 'package:e_comm_user/bloc/map/map_state.dart';
+import 'package:e_comm_user/core/shared_pref_helper.dart';
 import 'package:e_comm_user/di/configure.dart';
 import 'package:e_comm_user/models/address_request_model.dart';
 import 'package:e_comm_user/models/address_response_model.dart';
@@ -17,12 +20,14 @@ import 'package:e_comm_user/utils/functions.dart';
 import 'package:e_comm_user/utils/strings.dart';
 import 'package:e_comm_user/widgets/custom_appbar.dart';
 import 'package:e_comm_user/widgets/custom_button.dart';
+import 'package:e_comm_user/widgets/custom_text.dart';
 import 'package:e_comm_user/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 @RoutePage()
 class CreateAddressScreen extends StatefulWidget {
@@ -44,6 +49,7 @@ class _CreateAddressScreenState extends State<CreateAddressScreen> {
   AddressBloc addressBloc = getIt<AddressBloc>();
   final Completer<GoogleMapController> mapController = Completer();
   MapBloc mapBloc = getIt<MapBloc>();
+  HomeBloc homeBloc =getIt<HomeBloc>();
   LatLng selectedLatLng = const LatLng(20.5937, 78.9629);
   bool isAddressInitialized = false;
   bool isMapInitialized = false;
@@ -89,6 +95,11 @@ class _CreateAddressScreenState extends State<CreateAddressScreen> {
     googleMapController?.dispose();
     super.dispose();
   }
+  setUpdatedAddress(String newAddress) async {
+    final prefs = await SharedPreferences.getInstance();
+    final address = prefs.setString(SharedPrefHelper.userAddress,newAddress) ?? "";
+    addressStreamController.add(newAddress);
+  }
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -97,6 +108,7 @@ class _CreateAddressScreenState extends State<CreateAddressScreen> {
         listener: (context, state) {
             if(state is AddressActionSuccessState){
               Functions.showCustomSnackBar(context, message: state.message,backgroundColor: successColor);
+              homeBloc.add(GetHomeEvent(0));
               getIt<AppRoutes>().pop(true);
             }
             else if(state is AddressErrorState){
@@ -254,8 +266,8 @@ class _CreateAddressScreenState extends State<CreateAddressScreen> {
                                     color: whiteColor,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Text(
-                                    state.address ?? '',
+                                  child: CustomText(
+                                    text: state.address ?? '',
                                     maxLines: 2,
                                   ),
                                 ),
@@ -266,7 +278,8 @@ class _CreateAddressScreenState extends State<CreateAddressScreen> {
 
                         if (state is MapErrorState) {
                           return Center(
-                            child: Text(state.error),
+                            child: CustomText(
+                                text:state.error),
                           );
                         }
 
@@ -398,10 +411,15 @@ class _CreateAddressScreenState extends State<CreateAddressScreen> {
                   latitude: selectedLatLng.latitude,
                   longitude: selectedLatLng.longitude,
                 );
+                final address = [ addressRequestModel.address_line, addressRequestModel.city,
+                  addressRequestModel.state, addressRequestModel.country, addressRequestModel.pincode,
+                ].where((e) => e != null && e.isNotEmpty).join(", ");
                 if(widget.addressData == null){
                   addressBloc.add(CreateAddressEvent(addressRequestModel));
+                  setUpdatedAddress(address);
                 }else{
                   addressBloc.add(UpdateAddressEvent(widget.addressData?.id ?? 0,addressRequestModel));
+                  setUpdatedAddress(address);
                 }
               },
             ),
