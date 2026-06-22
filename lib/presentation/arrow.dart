@@ -10,6 +10,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:push_notification/ui/home/home_screen.dart';
 
 void main() => runApp(const ArrowPuzzleApp());
 
@@ -114,9 +115,9 @@ List<Level> buildLevels() {
   final l1 = Level(
     number: 1, rows: 3, cols: 3, title: 'Warm Up',
     arrows: [
-      _s(0, 1, ArrowDir.right),
+      _s(0, 1, ArrowDir.up),
       _s(1, 1, ArrowDir.down),
-      _s(1, 2, ArrowDir.left),
+      _s(2, 1, ArrowDir.up),
     ],
   );
 
@@ -127,6 +128,7 @@ List<Level> buildLevels() {
     arrows: [
       _s(0, 0, ArrowDir.right),
       _a([Offset(1, 0), Offset(1, 1), Offset(2, 1)], ArrowDir.right),
+      _a([Offset(1, 2), Offset(0, 2), Offset(0, 1)], ArrowDir.up),
       _s(2, 2, ArrowDir.up),
     ],
   );
@@ -140,6 +142,7 @@ List<Level> buildLevels() {
       _a([Offset(0, 3), Offset(1, 3), Offset(1, 2), Offset(2, 2)], ArrowDir.right),
       _s(3, 2, ArrowDir.up),
       _a([Offset(2, 0), Offset(2, 1), Offset(3, 1)], ArrowDir.right),
+      _a([Offset(1, 0), Offset(1, 1), Offset(0, 1), Offset(0, 2)], ArrowDir.down),
     ],
   );
 
@@ -148,11 +151,13 @@ List<Level> buildLevels() {
   final l4 = Level(
     number: 4, rows: 5, cols: 5, title: 'Double Spiral',
     arrows: [
-      _s(0, 0, ArrowDir.right),
+      _a([Offset(0, 0), Offset(0, 1), Offset(1, 1), Offset(1, 2)], ArrowDir.down),
       _a([Offset(1, 0), Offset(2, 0), Offset(2, 1), Offset(2, 2)], ArrowDir.down),
       _s(2, 4, ArrowDir.left),
       _a([Offset(0, 2), Offset(0, 3), Offset(1, 3), Offset(2, 3)], ArrowDir.right),
       _s(4, 2, ArrowDir.up),
+      _a([Offset(4, 0), Offset(3, 0), Offset(3, 1),Offset(3, 2),  Offset(3, 3), Offset(4, 3)], ArrowDir.right),
+      _a([Offset(3, 4), Offset(4, 4)], ArrowDir.right),
     ],
   );
 
@@ -162,13 +167,13 @@ List<Level> buildLevels() {
     number: 5, rows: 11, cols: 8, title: 'Grand Escape',
     arrows: [
       // 1. Top left single lone arrow pointing up
-      _a([Offset(1, 3), Offset(1, 1)], ArrowDir.up),
+      _a([Offset(1, 3), Offset(1, 1), Offset(0, 1), Offset(0, 0)], ArrowDir.up),
 
       // 2. Far left edge long vertical line that goes down and wraps around the bottom right
-      _a([Offset(0, 2), Offset(0, 10), Offset(6, 10)], ArrowDir.right),
+      _a([Offset(0, 2), Offset(0, 4), Offset(1, 4), Offset(6, 4),Offset(6, 6)], ArrowDir.down),
 
       // 3. Second vertical line down in col 2 (top segment)
-      _a([Offset(2, 1), Offset(2, 4)], ArrowDir.down),
+      _a([Offset(2, 0), Offset(2, 3)], ArrowDir.down),
 
       // 4. Second vertical line down in col 2 (bottom segment)
       _a([Offset(2, 5), Offset(2, 8)], ArrowDir.down),
@@ -183,16 +188,17 @@ List<Level> buildLevels() {
       _a([Offset(7, 4), Offset(7, 7)], ArrowDir.down),
 
       // 9. Right middle snake pathway weaving back to the right
-      _a([Offset(4, 4), Offset(6, 4), Offset(6, 5), Offset(4, 5)], ArrowDir.left),
 
       // 10. Center tiny path going right
       _a([Offset(4, 6), Offset(5, 6)], ArrowDir.right),
 
       // 11. Large bottom inner container loop going left
-      _a([Offset(3, 7), Offset(3, 9), Offset(7, 9), Offset(7, 8), Offset(5, 8)], ArrowDir.left),
+      _a([Offset(3, 10), Offset(3, 9), Offset(7, 9), Offset(7, 8), Offset(5, 8)], ArrowDir.left),
 
       // 12. Inner horizontal path going left
       _a([Offset(6, 7), Offset(4, 7)], ArrowDir.left),
+      _a([Offset(0, 10), Offset(0, 5), Offset(1, 5), Offset(1, 9), Offset(2, 9), Offset(2, 10)], ArrowDir.down),
+
     ],
   );
 
@@ -205,12 +211,10 @@ List<Level> buildLevels() {
     arrows: [
       _a([Offset(1, 0), Offset(1, 4)], ArrowDir.down),
       _a([Offset(0, 5), Offset(3, 5), Offset(3, 2)], ArrowDir.up),
-      _a([Offset(2, 7), Offset(2, 6), Offset(5, 6)], ArrowDir.right),
+      _a([Offset(2, 7), Offset(2, 6), Offset(5, 6), Offset(5, 7)], ArrowDir.down),
       _a([Offset(6, 0), Offset(4, 0), Offset(4, 3)], ArrowDir.down),
       _a([Offset(7, 6), Offset(7, 2), Offset(5, 2)], ArrowDir.left),
-      _s(5, 0, ArrowDir.up),
-      _s(0, 2, ArrowDir.left),
-      _s(6, 5, ArrowDir.right),
+      _a([Offset(4, 5), Offset(6, 5), Offset(6, 7), Offset(7, 7)], ArrowDir.right),
     ],
   );
 
@@ -219,15 +223,16 @@ List<Level> buildLevels() {
   final l7 = Level(
     number: 7, rows: 9, cols: 9, title: 'Twisted Grid',
     arrows: [
-      _a([Offset(0, 1), Offset(0, 8), Offset(4, 8)], ArrowDir.right),
-      _a([Offset(1, 1), Offset(4, 1), Offset(4, 3)], ArrowDir.down),
-      _a([Offset(2, 4), Offset(2, 2), Offset(6, 2)], ArrowDir.right),
+      _a([Offset(4, 7), Offset(4, 5),Offset(0, 5),Offset(0, 8), Offset(4, 8)], ArrowDir.right),
+      _a([Offset(4, 1),Offset(1, 1),  Offset(1, 3),Offset(4, 3)], ArrowDir.right),
+      _a([Offset(2, 2), Offset(7, 2),Offset(7, 0),Offset(8, 0),], ArrowDir.right),
       _a([Offset(3, 6), Offset(1, 6), Offset(1, 7)], ArrowDir.down),
-      _a([Offset(5, 8), Offset(8, 8), Offset(8, 5)], ArrowDir.up),
+      _a([Offset(6, 8), Offset(8, 8), Offset(8, 5)], ArrowDir.up),
       _a([Offset(8, 1), Offset(8, 4), Offset(6, 4)], ArrowDir.left),
       _a([Offset(7, 5), Offset(5, 5), Offset(5, 7)], ArrowDir.down),
-      _s(3, 2, ArrowDir.up),
-      _s(7, 6, ArrowDir.right),
+      _a([Offset(7, 6), Offset(6, 6), Offset(6, 7)], ArrowDir.down),
+      _a([Offset(0, 3), Offset(0, 0), Offset(6, 0),Offset(6, 1)], ArrowDir.down),
+      _a([Offset(7, 3), Offset(5, 3), Offset(5, 4),Offset(0, 4)], ArrowDir.left),
     ],
   );
 
@@ -236,15 +241,16 @@ List<Level> buildLevels() {
   final l8 = Level(
     number: 8, rows: 10, cols: 10, title: 'Mega Maze Pit',
     arrows: [
-      _a([Offset(1, 1), Offset(8, 1), Offset(8, 3)], ArrowDir.down),
+      _a([Offset(2, 0), Offset(8, 0), Offset(8, 3),Offset(9, 3),Offset(9, 2)], ArrowDir.up),
       _a([Offset(0, 2), Offset(0, 9), Offset(9, 9)], ArrowDir.right),
-      _a([Offset(2, 3), Offset(5, 3), Offset(5, 5)], ArrowDir.down),
-      _a([Offset(3, 5), Offset(3, 4), Offset(7, 4)], ArrowDir.right),
+      _a([Offset(2, 3), Offset(5, 3), Offset(5, 1),Offset(2, 1)], ArrowDir.left),
+      _a([Offset(3, 5), Offset(3, 4), Offset(6, 4),Offset(6, 1)], ArrowDir.up),
       _a([Offset(4, 7), Offset(1, 7), Offset(1, 8)], ArrowDir.down),
-      _a([Offset(6, 9), Offset(6, 7), Offset(9, 7)], ArrowDir.down),
+      _a([Offset(8, 8), Offset(6, 8), Offset(6, 7),Offset(8, 7),Offset(8, 6),Offset(1, 6),Offset(1, 0),Offset(0, 0)], ArrowDir.left),
       _a([Offset(7, 1), Offset(7, 4), Offset(9, 4)], ArrowDir.right),
-      _s(2, 5, ArrowDir.up),
-      _s(6, 2, ArrowDir.left),
+      _a([Offset(5, 7), Offset(5, 8), Offset(2, 8)], ArrowDir.left),
+      _a([Offset(2, 2), Offset(4, 2), ], ArrowDir.right),
+      _a([Offset(6, 5), Offset(9, 5), Offset(9, 8)], ArrowDir.down),
     ],
   );
 
@@ -253,15 +259,19 @@ List<Level> buildLevels() {
   final l9 = Level(
     number: 9, rows: 11, cols: 10, title: 'Ultimate Labyrinth',
     arrows: [
-      _a([Offset(1, 1), Offset(1, 5), Offset(3, 5), Offset(3, 2)], ArrowDir.up),
-      _a([Offset(0, 2), Offset(0, 10), Offset(8, 10)], ArrowDir.right),
-      _a([Offset(2, 1), Offset(5, 1), Offset(5, 4), Offset(2, 4)], ArrowDir.left),
-      _a([Offset(4, 0), Offset(8, 0), Offset(8, 3)], ArrowDir.down),
-      _a([Offset(6, 9), Offset(2, 9), Offset(2, 7)], ArrowDir.up),
-      _a([Offset(7, 5), Offset(7, 8), Offset(4, 8)], ArrowDir.left),
-      _s(4, 3, ArrowDir.right),
-      _s(6, 1, ArrowDir.up),
-      _s(8, 7, ArrowDir.right),
+      _a([Offset(1, 1), Offset(1, 5), Offset(2, 5), Offset(2, 2)], ArrowDir.up),
+      _a([Offset(0, 2), Offset(0, 10), Offset(1, 10),Offset(1, 6),Offset(5, 6),Offset(5, 7)], ArrowDir.down),
+      _a([Offset(2, 1), Offset(5, 1), Offset(5, 4), Offset(3, 4),Offset(3, 5)], ArrowDir.down),
+      _a([Offset(7, 0), Offset(8, 0), Offset(8, 3),Offset(9, 3)], ArrowDir.right),
+      _a([Offset(6, 9), Offset(3, 9),Offset(3, 7), Offset(2, 7),Offset(2, 10)], ArrowDir.down),
+      _a([Offset(7, 6), Offset(7, 8), Offset(6, 8),Offset(6, 5),Offset(4, 5)], ArrowDir.left),
+      _a([Offset(9, 0), Offset(9, 2)], ArrowDir.down),
+      _a([ Offset(7, 3), Offset(7, 1)], ArrowDir.up),
+      _a([Offset(4, 2), Offset(4, 3), Offset(3, 3),Offset(3, 2)], ArrowDir.up),
+      _a([Offset(3, 10), Offset(7, 10),Offset(7, 9), Offset(8, 9),Offset(8, 10)], ArrowDir.down),
+      _a([Offset(9, 10), Offset(9, 8),Offset(8, 8), Offset(8, 7),Offset(9, 7)], ArrowDir.right),
+      _a([Offset(9, 6), Offset(9, 4),Offset(6, 4), Offset(6, 0),Offset(0, 0)], ArrowDir.left),
+      _a([Offset(7,5), Offset(8, 5),Offset(8, 6), ], ArrowDir.down),
     ],
   );
 
@@ -282,7 +292,7 @@ List<Level> buildLevels() {
     ],
   );
 
-  return [l6, l2, l3, l4, l5, l6, l7, l8, l9, l10];
+  return [l1, l2, l3, l4, l5, l6, l7, l8, l9, l10];
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -497,15 +507,27 @@ class PuzzleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<PuzzleBloc, PuzzleState>(
-          builder: (ctx, state) => Column(
-            children: [
-              _Header(state: state),
-              Expanded(child: _Body(state: state)),
-              _Footer(state: state),
-            ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen(),));
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          leading: IconButton(onPressed: (){
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeScreen(),));
+          }, icon: Icon(Icons.arrow_back)),
+        ),
+        body: SafeArea(
+          child: BlocBuilder<PuzzleBloc, PuzzleState>(
+            builder: (ctx, state) => Column(
+              children: [
+                _Header(state: state),
+                Expanded(child: _Body(state: state)),
+                _Footer(state: state),
+              ],
+            ),
           ),
         ),
       ),
@@ -707,7 +729,7 @@ class _ArrowTileState extends State<_ArrowTile> with TickerProviderStateMixin {
     super.initState();
     _animCtrl = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: widget.arrow.removing ? 450 : 800),
+      duration: Duration(milliseconds: widget.arrow.removing ? 3000 : 800),
     );
     _progress = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeInOutCubic));
 
@@ -843,49 +865,76 @@ class _ArrowPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (path.isEmpty) return;
 
-    // Use your preferred thin stroke width
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 2
+      ..strokeWidth = 2.0 // Exact original stroke width
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.stroke;
 
-    // 1. Build base path from grid coords
-    final extendedPath = Path();
-    final first = path.first;
-    extendedPath.moveTo(first.dx * cellW + cellW / 2, first.dy * cellH + cellH / 2);
-
-    for (int i = 1; i < path.length; i++) {
-      final pt = path[i];
-      extendedPath.lineTo(pt.dx * cellW + cellW / 2, pt.dy * cellH + cellH / 2);
+    // 1. Map all grid coordinates to screen pixel points
+    final first = path.first; // <-- DEFINED HERE NOW to fix the 'first' undefined error
+    final List<Offset> points = [];
+    for (final pt in path) {
+      points.add(Offset(pt.dx * cellW + cellW / 2, pt.dy * cellH + cellH / 2));
     }
 
-    // Measure base path length (before exit extension)
-    double baseLength = 0.0;
-    final baseMetrics = extendedPath.computeMetrics().toList();
-    if (baseMetrics.isNotEmpty) {
-      baseLength = baseMetrics.first.length;
-    }
-
-    // 2. Extend path continuously from the end cell
+    // Append the off-screen exit extension point
     final last = path.last;
     final lastX = last.dx * cellW + cellW / 2;
     final lastY = last.dy * cellH + cellH / 2;
     final (dr, dc) = dir.exitDelta();
-
     final exitDistance = math.max(size.width, size.height) * 2.0;
-    final extendX = lastX + dc * exitDistance;
-    final extendY = lastY + dr * exitDistance;
-    extendedPath.lineTo(extendX, extendY);
+    points.add(Offset(lastX + dc * exitDistance, lastY + dr * exitDistance));
+
+    // 2. Build the smooth base path by rounding the corner joints manually
+    final extendedPath = Path();
+    if (points.isNotEmpty) {
+      extendedPath.moveTo(points.first.dx, points.first.dy);
+
+      // Your updated fine-tuned corner radius setting
+      final double cornerRadius = math.min(cellW, cellH) * 0.05;
+
+      for (int i = 1; i < points.length - 1; i++) {
+        final pPrev = points[i - 1];
+        final pCurr = points[i];
+        final pNext = points[i + 1];
+
+        final v1 = pCurr - pPrev;
+        final v2 = pNext - pCurr;
+
+        final d1 = v1.distance;
+        final d2 = v2.distance;
+
+        // Ensure radius fits comfortably within the segment lengths
+        final r = math.min(cornerRadius, math.min(d1 / 2, d2 / 2));
+
+        if (r > 0) {
+          final pStart = pCurr - (v1 / d1) * r;
+          final pEnd = pCurr + (v2 / d2) * r;
+
+          extendedPath.lineTo(pStart.dx, pStart.dy);
+          extendedPath.quadraticBezierTo(pCurr.dx, pCurr.dy, pEnd.dx, pEnd.dy);
+        } else {
+          extendedPath.lineTo(pCurr.dx, pCurr.dy);
+        }
+      }
+      extendedPath.lineTo(points.last.dx, points.last.dy);
+    }
+
+    // 3. Keep your exact original slithering movement calculation
+    double baseLength = 0.0;
+    for (int i = 0; i < points.length - 2; i++) {
+      baseLength += (points[i + 1] - points[i]).distance;
+    }
+    final extendedMetrics = extendedPath.computeMetrics().toList();
+
 
     double extendedLength = 0.0;
-    final extendedMetrics = extendedPath.computeMetrics().toList();
     if (extendedMetrics.isNotEmpty) {
       extendedLength = extendedMetrics.first.length;
     }
 
-    // 3. Keep your exact original slithering movement calculation
     final double startDist = progress * extendedLength;
     final double endDist = baseLength + progress * (extendedLength - baseLength);
 
@@ -893,6 +942,7 @@ class _ArrowPainter extends CustomPainter {
     Offset? headPos;
     double headAngle = dir.angle;
 
+    // Locate this block inside your _ArrowPainter paint() method:
     if (extendedMetrics.isNotEmpty) {
       final metric = extendedMetrics.first;
       if (endDist > startDist) {
@@ -901,18 +951,21 @@ class _ArrowPainter extends CustomPainter {
       final tangent = metric.getTangentForOffset(endDist);
       if (tangent != null) {
         headPos = tangent.position;
+        // FIX: Ensure the head angle always matches the exit direction vector smoothly
         headAngle = math.atan2(tangent.vector.dy, tangent.vector.dx);
       }
     } else {
+      // Fallback configuration
       drawnPath.moveTo(first.dx * cellW + cellW / 2, first.dy * cellH + cellH / 2);
       for (int i = 1; i < path.length; i++) {
         final pt = path[i];
         drawnPath.lineTo(pt.dx * cellW + cellW / 2, pt.dy * cellH + cellH / 2);
       }
       headPos = Offset(lastX, lastY);
+      headAngle = dir.angle; // FIX: Fallback directly to the explicit arrow direction enum angle
     }
 
-    // Draw the winding line shaft
+    // Draw the winding curved line shaft
     canvas.drawPath(drawnPath, paint);
 
     // 4. Draw matching stroke wings seamlessly fused at the absolute tip
@@ -925,7 +978,6 @@ class _ArrowPainter extends CustomPainter {
       const double hWidth = 6.5;
       const double hLength = 10.0;
 
-      // Pointing exactly outwards from (0,0) so the line ends right at the point
       headPath.moveTo(-hLength, -hWidth);
       headPath.lineTo(0, 0);
       headPath.lineTo(-hLength, hWidth);
@@ -941,9 +993,7 @@ class _ArrowPainter extends CustomPainter {
           old.dir != dir ||
           old.color != color ||
           old.progress != progress;
-}
-// ═══════════════════════════════════════════════════════════
-// REFRESHED FOOTER CONTROL PANELS
+}// REFRESHED FOOTER CONTROL PANELS
 // ═══════════════════════════════════════════════════════════
 
 class _Footer extends StatelessWidget {
